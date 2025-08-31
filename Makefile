@@ -26,7 +26,8 @@ help:
 	@echo ""
 	@echo "Examples:"
 	@echo "  make dev && make test"
-	@echo "  make optimize --src=../vendor/nextjs/docs --out=../sourcedocs/nextjs --repo=vercel/next.js --ref=main"
+	@echo "  make optimize src=../vendor/nextjs/docs out=../sourcedocs/nextjs repo=vercel/next.js ref=main"
+	@echo "  make optimize src=../vendor/nextjs/docs out=../sourcedocs/nextjs repo=vercel/next.js ref=main metrics=metrics.json"
 
 # Development setup
 install:
@@ -56,10 +57,10 @@ format:
 optimize:
 	@if [ -z "$(src)" ] || [ -z "$(out)" ] || [ -z "$(repo)" ] || [ -z "$(ref)" ]; then \
 		echo "Error: Missing required parameters. Usage:"; \
-		echo "  make optimize src=<docs_dir> out=<sourcedocs_path> repo=<owner/name> ref=<branch|sha> [topics=<topics>]"; \
+		echo "  make optimize src=<docs_dir> out=<sourcedocs_path> repo=<owner/name> ref=<branch|sha> [topics=<topics>] [metrics=<metrics_path>]"; \
 		exit 1; \
 	fi
-	poetry run contextor optimize --src=$(src) --out=$(out) --repo=$(repo) --ref=$(ref) $(if $(topics),--topics=$(topics))
+	poetry run contextor optimize --src=$(src) --out=$(out) --repo=$(repo) --ref=$(ref) $(if $(topics),--topics=$(topics)) $(if $(metrics),--metrics-output=$(metrics))
 
 # Server operations (Phase 2)
 serve:

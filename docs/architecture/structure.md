@@ -57,6 +57,7 @@ contextor/
 │     └─ structure.md
 │
 ├─ scripts/
+│  ├─ deploy.sh
 │  └─ sync_sourcedocs.sh           # Optional helper: run optimise and commit to sourcedocs
 │
 ├─ deploy/

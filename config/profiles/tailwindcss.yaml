@@ -1,0 +1,52 @@
+# Tailwind CSS Documentation Optimization Profile
+# Optimized for Tailwind CSS docs structure and content patterns
+
+# File inclusion patterns
+include:
+  - "src/**/*.md"
+  - "src/**/*.mdx"
+
+# File exclusion patterns
+exclude:
+  - "**/node_modules/**"
+  - "**/dist/**"
+  - "**/build/**"
+  - "**/.turbo/**"
+  - "**/*.min.*"
+
+# Default topics for Tailwind CSS content
+default_topics:
+  - "css"
+  - "framework"
+  - "tailwind"
+  - "design-system"
+  - "styling"
+  - "utility-first"
+
+# Optimization profile for CSS-heavy documentation
+profile: balanced
+
+# Tailwind specific transforms
+transforms:
+  # Handle Tailwind specific MDX components
+  mdx_components:
+    - "Callout"
+    - "CodeSample"
+    - "Tip"
+    - "Warning"
+    - "TipGood"
+    - "TipBad"
+  
+  # CSS code examples are usually short but important
+  code_block_rules:
+    preserve_languages:
+      - "css"
+      - "html"
+      - "javascript"
+      - "jsx"
+    max_lines: 25
+    
+  # Link rewriting rules for Tailwind docs
+  link_rules:
+    base_url: "https://tailwindcss.com"
+    preserve_anchors: true

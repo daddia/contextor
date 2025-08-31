@@ -17,16 +17,18 @@
 
 ### Sprint 2 — **`sourcedocs` Integration & CI** → Release v0.1.1
 
-- [ ] **Matrix GitHub Action in `sourcedocs`** (P1 · S · Status: Not started)  
+- [x] **Matrix GitHub Action in `sourcedocs`** (P1 · S · Status: Done)  
   Checkout upstream repos (e.g., Next.js, Tailwind) → run `contextor optimize` → commit `{source-slug}/` when changed.
 
-- [ ] **Run metrics artefact** (P3 · S · Status: Not started)  
+- [x] **Run metrics artefact** (P3 · S · Status: Done)  
   Emit simple JSON (`processed`, `written`, `skipped`, `errors`) per run for observability.
 
-- [ ] **Samples & profiles** (P3 · S · Status: Not started)  
+- [x] **Samples & profiles** (P3 · S · Status: Done)  
   Provide sample `optimize.yaml` and recommended include/exclude rules for common projects.
 
 ---
+
+## Current Sprint
 
 ### Sprint 3 — **MCP Server (Read-only)** → Release v0.2.0
 
@@ -43,6 +45,8 @@
   Contract tests for tool responses; quickstart guide.
 
 ---
+
+## Backlog
 
 ### Sprint 4 — **Quality & Performance** → Release v0.2.1
 
@@ -148,10 +152,10 @@
   `contextor optimize --src <docs_dir> --out <sourcedocs> --repo <owner/name> --ref <sha|branch> --topics …`.
 - [x] **Config file (optional) & defaults**
   Support `config/optimize.yaml` for include/exclude globs, per-source topics, and output scope.
-- [x] **Repo metadata capture** 
+- [x] **Repo metadata capture**
   Resolve canonical GitHub URL for each file (repo, ref, path) for front-matter provenance.
 
-### Legacy assets available — **Reusable in Phase 2 & 3** — **ARCHIVED**
+### Legacy assets available — *Reusable in Later Phases* — **ARCHIVED**
 
 - [x] **Early MCP server scaffolding**  
   Prior server modules and handlers can accelerate the Phase-2 read-only server.
@@ -162,7 +166,7 @@
 
 ---
 
-## Archive Roadmap - IGNORE THIS SECTION
+## Archive Roadmap - **IGNORE THIS SECTION**
 
 ### Sprint 1 — **Core Extraction Engine** → Release v0.1.0
 

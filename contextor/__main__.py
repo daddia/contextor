@@ -1,5 +1,7 @@
 """CLI entry point for Contextor."""
 
+import json
+from datetime import datetime
 from pathlib import Path
 
 import click
@@ -36,7 +38,8 @@ def cli(ctx):
     help="Optimization profile: lossless, balanced, or compact",
 )
 @click.option("--config", default="", help="Configuration file path (YAML)")
-def optimize(src, out, repo, ref, topics, profile, config):
+@click.option("--metrics-output", default="", help="Output path for run metrics JSON")
+def optimize(src, out, repo, ref, topics, profile, config, metrics_output):
     """Convert a documentation directory to .mdc files.
 
     This command processes Markdown/MDX files from a source directory,
@@ -114,6 +117,23 @@ def optimize(src, out, repo, ref, topics, profile, config):
         logger.error("Failed to process directory", error=str(e))
         raise click.Abort() from e
 
+    # Prepare metrics
+    metrics = {
+        "processed": processed,
+        "written": written,
+        "skipped": skipped,
+        "errors": errors,
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "source": {
+            "repo": repo,
+            "ref": ref,
+            "src_path": str(src_path),
+            "out_path": str(out_path),
+        },
+        "profile": profile,
+        "topics": topic_list,
+    }
+
     logger.info(
         "Optimization complete",
         processed=processed,
@@ -121,6 +141,18 @@ def optimize(src, out, repo, ref, topics, profile, config):
         skipped=skipped,
         errors=errors,
     )
+
+    # Write metrics if requested
+    if metrics_output:
+        metrics_path = Path(metrics_output)
+        try:
+            # Ensure parent directory exists
+            metrics_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(metrics_path, "w", encoding="utf-8") as f:
+                json.dump(metrics, f, indent=2)
+            logger.info("Metrics written", path=metrics_output)
+        except Exception as e:
+            logger.error("Failed to write metrics", path=metrics_output, error=str(e))
 
     if errors > 0:
         raise click.Abort()

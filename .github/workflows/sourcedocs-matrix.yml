@@ -1,0 +1,275 @@
+name: Sourcedocs Matrix Integration
+
+on:
+  schedule:
+    # Run daily at 02:00 UTC to catch upstream changes
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      force_update:
+        description: 'Force update all sources (ignore change detection)'
+        type: boolean
+        default: false
+      sources_filter:
+        description: 'Comma-separated list of sources to update (leave empty for all)'
+        type: string
+        default: ''
+
+jobs:
+  matrix-setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout contextor
+        uses: actions/checkout@v4
+        with:
+          path: contextor
+
+      - name: Set up matrix
+        id: set-matrix
+        run: |
+          # Define the source matrix configuration
+          cat > sources.json << 'EOF'
+          {
+            "include": [
+              {
+                "repo": "vercel/next.js",
+                "ref": "canary",
+                "src_path": "docs",
+                "source_slug": "nextjs",
+                "topics": "framework,nextjs,react,web-development"
+              },
+              {
+                "repo": "tailwindlabs/tailwindcss",
+                "ref": "master", 
+                "src_path": "src",
+                "source_slug": "tailwindcss",
+                "topics": "css,framework,tailwind,design-system"
+              },
+              {
+                "repo": "facebook/react",
+                "ref": "main",
+                "src_path": "docs",
+                "source_slug": "react",
+                "topics": "framework,react,javascript,ui"
+              },
+              {
+                "repo": "microsoft/vscode",
+                "ref": "main",
+                "src_path": "docs",
+                "source_slug": "vscode",
+                "topics": "editor,vscode,development-tools"
+              },
+              {
+                "repo": "vitejs/vite",
+                "ref": "main",
+                "src_path": "docs",
+                "source_slug": "vite",
+                "topics": "build-tool,vite,javascript,bundler"
+              }
+            ]
+          }
+          EOF
+
+          # Filter sources if specified
+          if [ -n "${{ github.event.inputs.sources_filter }}" ]; then
+            echo "Filtering sources: ${{ github.event.inputs.sources_filter }}"
+            IFS=',' read -ra FILTERS <<< "${{ github.event.inputs.sources_filter }}"
+            jq --argjson filters "$(printf '%s\n' "${FILTERS[@]}" | jq -R . | jq -s .)" \
+               '.include |= map(select(.source_slug as $slug | $filters | index($slug)))' \
+               sources.json > filtered_sources.json
+            mv filtered_sources.json sources.json
+          fi
+
+          echo "matrix=$(cat sources.json)" >> $GITHUB_OUTPUT
+
+  update-sourcedocs:
+    needs: matrix-setup
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.matrix-setup.outputs.matrix) }}
+    
+    steps:
+      - name: Checkout contextor
+        uses: actions/checkout@v4
+        with:
+          path: contextor
+
+      - name: Checkout sourcedocs
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/sourcedocs
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: sourcedocs
+
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ matrix.repo }}
+          ref: ${{ matrix.ref }}
+          path: upstream/${{ matrix.source_slug }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Install contextor dependencies
+        working-directory: contextor
+        run: |
+          poetry install --only=main
+
+      - name: Check for changes (unless forced)
+        id: check-changes
+        if: github.event.inputs.force_update != 'true'
+        run: |
+          cd upstream/${{ matrix.source_slug }}
+          
+          # Get the latest commit hash from the source
+          LATEST_COMMIT=$(git rev-parse HEAD)
+          echo "latest_commit=$LATEST_COMMIT" >> $GITHUB_OUTPUT
+          
+          # Check if we have a previous run record
+          PREV_COMMIT_FILE="sourcedocs/${{ matrix.source_slug }}/.contextor-commit"
+          if [ -f "$PREV_COMMIT_FILE" ]; then
+            PREV_COMMIT=$(cat "$PREV_COMMIT_FILE")
+            echo "previous_commit=$PREV_COMMIT" >> $GITHUB_OUTPUT
+            
+            if [ "$LATEST_COMMIT" = "$PREV_COMMIT" ]; then
+              echo "has_changes=false" >> $GITHUB_OUTPUT
+              echo "No changes detected in ${{ matrix.repo }} since $PREV_COMMIT"
+            else
+              echo "has_changes=true" >> $GITHUB_OUTPUT
+              echo "Changes detected in ${{ matrix.repo }}: $PREV_COMMIT -> $LATEST_COMMIT"
+            fi
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "First run for ${{ matrix.repo }}, will process all files"
+          fi
+
+      - name: Run contextor optimize
+        if: steps.check-changes.outputs.has_changes == 'true' || github.event.inputs.force_update == 'true'
+        working-directory: contextor
+        run: |
+          poetry run contextor optimize \
+            --src "../upstream/${{ matrix.source_slug }}/${{ matrix.src_path }}" \
+            --out "../sourcedocs/${{ matrix.source_slug }}" \
+            --repo "${{ matrix.repo }}" \
+            --ref "${{ matrix.ref }}" \
+            --topics "${{ matrix.topics }}" \
+            --metrics-output "../sourcedocs/${{ matrix.source_slug }}/metrics.json"
+
+      - name: Record commit hash
+        if: steps.check-changes.outputs.has_changes == 'true' || github.event.inputs.force_update == 'true'
+        run: |
+          cd upstream/${{ matrix.source_slug }}
+          git rev-parse HEAD > "../sourcedocs/${{ matrix.source_slug }}/.contextor-commit"
+
+      - name: Check if changes were made to sourcedocs
+        id: check-sourcedocs-changes
+        if: steps.check-changes.outputs.has_changes == 'true' || github.event.inputs.force_update == 'true'
+        working-directory: sourcedocs
+        run: |
+          git add ${{ matrix.source_slug }}/
+          if git diff --cached --quiet; then
+            echo "has_sourcedocs_changes=false" >> $GITHUB_OUTPUT
+            echo "No changes to commit for ${{ matrix.source_slug }}"
+          else
+            echo "has_sourcedocs_changes=true" >> $GITHUB_OUTPUT
+            echo "Changes detected in sourcedocs for ${{ matrix.source_slug }}"
+          fi
+
+      - name: Commit and push changes
+        if: steps.check-sourcedocs-changes.outputs.has_sourcedocs_changes == 'true'
+        working-directory: sourcedocs
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Create commit message with metrics if available
+          COMMIT_MSG="chore(context): refresh ${{ matrix.source_slug }} MDC files"
+          
+          if [ -f "${{ matrix.source_slug }}/metrics.json" ]; then
+            METRICS=$(cat "${{ matrix.source_slug }}/metrics.json")
+            PROCESSED=$(echo "$METRICS" | jq -r '.processed // 0')
+            WRITTEN=$(echo "$METRICS" | jq -r '.written // 0')
+            SKIPPED=$(echo "$METRICS" | jq -r '.skipped // 0')
+            ERRORS=$(echo "$METRICS" | jq -r '.errors // 0')
+            
+            COMMIT_MSG="$COMMIT_MSG
+
+          📊 Run metrics:
+          - Processed: $PROCESSED files
+          - Written: $WRITTEN files  
+          - Skipped: $SKIPPED files
+          - Errors: $ERRORS files
+          
+          Source: ${{ matrix.repo }}@${{ steps.check-changes.outputs.latest_commit || matrix.ref }}"
+          fi
+          
+          git commit -m "$COMMIT_MSG"
+          git push
+
+      - name: Upload metrics artifact
+        if: steps.check-changes.outputs.has_changes == 'true' || github.event.inputs.force_update == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: metrics-${{ matrix.source_slug }}
+          path: sourcedocs/${{ matrix.source_slug }}/metrics.json
+          retention-days: 30
+
+  summary:
+    needs: [matrix-setup, update-sourcedocs]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all metrics
+        uses: actions/download-artifact@v4
+        with:
+          pattern: metrics-*
+          path: metrics/
+
+      - name: Generate summary
+        run: |
+          echo "# Sourcedocs Matrix Update Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Source | Status | Processed | Written | Skipped | Errors |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|-----------|---------|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          for metrics_file in metrics/*/metrics.json; do
+            if [ -f "$metrics_file" ]; then
+              SOURCE=$(basename $(dirname "$metrics_file") | sed 's/^metrics-//')
+              PROCESSED=$(jq -r '.processed // 0' "$metrics_file")
+              WRITTEN=$(jq -r '.written // 0' "$metrics_file") 
+              SKIPPED=$(jq -r '.skipped // 0' "$metrics_file")
+              ERRORS=$(jq -r '.errors // 0' "$metrics_file")
+              
+              if [ "$ERRORS" -gt 0 ]; then
+                STATUS="❌ Failed"
+              elif [ "$WRITTEN" -gt 0 ]; then
+                STATUS="✅ Updated"
+              else
+                STATUS="⏭️ Skipped"
+              fi
+              
+              echo "| $SOURCE | $STATUS | $PROCESSED | $WRITTEN | $SKIPPED | $ERRORS |" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event.inputs.force_update }}" = "true" ]; then
+            echo "**Force update:** Yes" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -n "${{ github.event.inputs.sources_filter }}" ]; then
+            echo "**Sources filter:** ${{ github.event.inputs.sources_filter }}" >> $GITHUB_STEP_SUMMARY
+          fi

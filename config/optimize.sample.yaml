@@ -1,0 +1,201 @@
+# Contextor Optimization Configuration - Sample
+# Copy this file to optimize.yaml and customize for your needs
+# 
+# This configuration supports both single-source and multi-source scenarios.
+# For multi-source CI/CD workflows, use the sources section to define
+# per-repository settings.
+
+# Global file inclusion patterns (glob patterns)
+# These apply to all sources unless overridden
+include:
+  - "*.md"
+  - "*.mdx"
+  - "**/*.md"
+  - "**/*.mdx"
+
+# Global file exclusion patterns (glob patterns)
+# These apply to all sources unless overridden
+exclude:
+  - "node_modules/**"
+  - ".git/**"
+  - "dist/**"
+  - "build/**"
+  - ".next/**"
+  - ".nuxt/**"
+  - ".vite/**"
+  - ".turbo/**"
+  - "coverage/**"
+  - "__pycache__/**"
+  - "*.min.js"
+  - "*.min.css"
+  - "CHANGELOG.md"
+  - "LICENSE*"
+  - "SECURITY.md"
+
+# Default topics to apply to all files (can be overridden by CLI or per-source)
+default_topics:
+  - "documentation"
+
+# Default optimization profile (lossless, balanced, compact)
+default_profile: "balanced"
+
+# Per-source configuration for matrix CI/CD workflows
+sources:
+  "vercel/next.js":
+    profile: "balanced"
+    topics:
+      - "framework"
+      - "nextjs"
+      - "react"
+      - "web-development"
+      - "javascript"
+      - "typescript"
+    include:
+      - "docs/**/*.md"
+      - "docs/**/*.mdx"
+    exclude:
+      - "docs/api-reference/legacy/**"
+      - "docs/pages/api-reference/legacy/**"
+    
+  "tailwindlabs/tailwindcss":
+    profile: "balanced"
+    topics:
+      - "css"
+      - "framework"
+      - "tailwind"
+      - "design-system"
+      - "styling"
+      - "utility-first"
+    include:
+      - "src/**/*.md"
+      - "src/**/*.mdx"
+    exclude:
+      - "src/pages/blog/**"
+  
+  "facebook/react":
+    profile: "balanced"
+    topics:
+      - "framework"
+      - "react"
+      - "javascript"
+      - "ui"
+      - "component"
+      - "hooks"
+    include:
+      - "docs/**/*.md"
+      - "docs/**/*.mdx"
+      - "beta/**/*.md"
+      - "beta/**/*.mdx"
+    exclude:
+      - "**/legacy/**"
+  
+  "microsoft/vscode":
+    profile: "balanced"
+    topics:
+      - "editor"
+      - "vscode"
+      - "development-tools"
+      - "ide"
+      - "extensions"
+    include:
+      - "docs/**/*.md"
+      - "api/**/*.md"
+    exclude:
+      - "**/resources/**"
+  
+  "vitejs/vite":
+    profile: "balanced"
+    topics:
+      - "build-tool"
+      - "vite"
+      - "javascript"
+      - "bundler"
+      - "development"
+      - "tooling"
+    include:
+      - "docs/**/*.md"
+      - "docs/**/*.mdx"
+
+# Optimization profiles define how aggressively to compress content
+profiles:
+  lossless:
+    # No content compression, preserve everything
+    description: "Preserves all content without compression"
+    compress_code_blocks: false
+    compress_json: false
+    max_code_block_lines: null
+    compress_whitespace: false
+    preserve_comments: true
+    
+  balanced:
+    # Moderate compression for better token efficiency while preserving meaning
+    description: "Balanced compression for optimal token efficiency"
+    compress_code_blocks: true
+    compress_json: true
+    max_code_block_lines: 25
+    compress_whitespace: false
+    preserve_comments: true
+    elide_large_outputs: true
+    
+  compact:
+    # Aggressive compression for maximum token savings
+    description: "Aggressive compression for maximum token savings"
+    compress_code_blocks: true
+    compress_json: true
+    max_code_block_lines: 15
+    compress_whitespace: true
+    preserve_comments: false
+    elide_large_outputs: true
+    remove_empty_sections: true
+
+# Advanced transform configuration
+transforms:
+  # MDX component handling
+  mdx:
+    # Common components to preserve/unwrap intelligently
+    preserve_components:
+      - "Callout"
+      - "Warning" 
+      - "Tip"
+      - "CodeBlock"
+      - "Tabs"
+      - "Tab"
+    
+    # Components to completely remove (usually layout/styling only)
+    remove_components:
+      - "Container"
+      - "Wrapper"
+      - "Layout"
+  
+  # Link processing rules
+  links:
+    # Convert relative links to absolute where possible
+    make_absolute: true
+    # Remove "edit this page" and similar boilerplate links
+    remove_edit_links: true
+    # Preserve anchor links for navigation
+    preserve_anchors: true
+  
+  # Code block processing
+  code_blocks:
+    # Languages to never compress (always preserve fully)
+    preserve_languages:
+      - "diff"
+      - "patch"
+    
+    # Add language hints for better LLM understanding
+    add_language_hints: true
+    
+    # Compress very long output blocks but preserve structure
+    compress_outputs: true
+
+# Output configuration
+output:
+  # Include run metrics in each output directory
+  include_metrics: true
+  
+  # Generate summary statistics
+  generate_summary: true
+  
+  # Preserve source file timestamps where possible
+  preserve_timestamps: false
