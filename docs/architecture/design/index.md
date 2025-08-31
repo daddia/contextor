@@ -17,7 +17,7 @@ A Feature Design Document captures the comprehensive technical design for a feat
 
 | ID                                             | Title                         | Status   | Date       | Owner        |
 |------------------------------------------------|-------------------------------|----------|------------|--------------|
-| [FDD-001](FDD-001-configuration-management.md) | Configuration Management      | Accepted | 2025-01-15 | —            |
+| [FDD-001](FDD-001-content-intelligence.md)     | Advanced Content Intelligence | Accepted | 2025-08-31 | —            |
 
 ---
 
@@ -70,6 +70,5 @@ Use the template provided at [../templates/feature-design-doc.md](../templates/f
 
 ## Resources
 
-- [Design Doc Template](../templates/feature-design-doc.md)
 - [Google's Design Doc Guide](https://www.industrialempathy.com/posts/design-doc-a-design-doc/)
 - [Architecture Decision Records](../decisions/register.md)

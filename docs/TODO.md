@@ -15,23 +15,6 @@
 
 ## Current Sprint
 
-### Sprint 3 — **Advanced Content Intelligence** → Release v0.3.0
-
-- [x] **Advanced Topic** Automatic topic extraction 
-  - [x] **Topic Extraction**: from content using keywords, headings, and metadata.
-  - [ ] **Topic tagging helpers**: Derive topics from path/headings; merge with provided `--topics`.
-  - [ ] **Semantic analysis**: Extract key concepts, relationships between pages
-
-- [ ] **Cross-linking**: Suggest “related pages” in front-matter.
-  - [ ] **Duplicate detection**: Flag near-duplicate pages across sources.
-  - [ ] **Content similarity**: Detect duplicate or highly similar content
-
-- [ ] **Quality scoring**: Rate content quality, completeness, freshness
-
----
-
-## Backlog
-
 ### Sprint 4 — **MCP Server (Read-only)** → Release v0.2.0
 
 - [ ] **`contextor-server` (Python, SSE)** (P1 · M · Status: Not started)  
@@ -124,6 +107,19 @@
 ## Completed
 > Pre-pivot work retained for later phases (do not include in active backlog).
 
+### Sprint 3 — **Advanced Content Intelligence**  - *COMPLETE*
+
+- [x] **Advanced Topic** Automatic topic extraction 
+  - [x] **Topic Extraction**: from content using keywords, headings, and metadata.
+  - [x] **Topic tagging helpers**: Derive topics from path/headings; merge with provided `--topics`.
+  - [x] **Semantic analysis**: Extract key concepts, relationships between pages
+- [x] **Cross-linking**: Suggest “related pages” in front-matter.
+  - [x] **Duplicate detection**: Flag near-duplicate pages across sources.
+  - [x] **Content similarity**: Detect duplicate or highly similar content
+- [x] **Quality scoring**: Rate content quality, completeness, freshness
+
+---
+
 ### **`sourcedocs` Integration & CI** - *COMPLETE*
 
 - [x] **Matrix GitHub Action in `sourcedocs`** (P1 · S · Status: Done)  
@@ -132,7 +128,6 @@
   Emit simple JSON (`processed`, `written`, `skipped`, `errors`) per run for observability.
 - [x] **Samples & profiles** (P3 · S · Status: Done)  
   Provide sample `optimize.yaml` and recommended include/exclude rules for common projects.
-
 
 ### **Core Pipeline: Directory → MDC** - *COMPLETE*
 
@@ -181,7 +176,6 @@
 
 - [ ] **HTTP requests extractor** (P1 · M · Status: Not started)  
   Implement `RequestsExtractor` with session management, headers, rate limiting using `requests`.
-
 - [ ] **HTML processing with BeautifulSoup** (P1 · M · Status: Not started)  
   Content extraction, selector-based parsing, content cleaning with `beautifulsoup4`.
 
