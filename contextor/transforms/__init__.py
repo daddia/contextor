@@ -7,7 +7,13 @@ from .markdown_norm import normalize_markdown
 from .mdx_clean import clean_mdx
 from .size import compress_content
 
-__all__ = ["apply_transforms", "clean_mdx", "normalize_markdown", "fix_links", "compress_content"]
+__all__ = [
+    "apply_transforms",
+    "clean_mdx",
+    "normalize_markdown",
+    "fix_links",
+    "compress_content",
+]
 
 
 def apply_transforms(

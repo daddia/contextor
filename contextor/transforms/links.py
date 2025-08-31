@@ -33,27 +33,25 @@ def _remove_boilerplate_links(content: str) -> str:
     # Patterns for common boilerplate
     boilerplate_patterns = [
         # "Edit this page" links
-        r'\[Edit this page[^\]]*\]\([^)]+\)',
-        r'\[Edit on GitHub[^\]]*\]\([^)]+\)',
-        r'\[Improve this page[^\]]*\]\([^)]+\)',
-
+        r"\[Edit this page[^\]]*\]\([^)]+\)",
+        r"\[Edit on GitHub[^\]]*\]\([^)]+\)",
+        r"\[Improve this page[^\]]*\]\([^)]+\)",
         # Navigation links that aren't useful in extracted context
-        r'\[← Previous[^\]]*\]\([^)]+\)',
-        r'\[Next →[^\]]*\]\([^)]+\)',
-        r'\[Back to top[^\]]*\]\([^)]+\)',
-
+        r"\[← Previous[^\]]*\]\([^)]+\)",
+        r"\[Next →[^\]]*\]\([^)]+\)",
+        r"\[Back to top[^\]]*\]\([^)]+\)",
         # Social/sharing links
-        r'\[Share on Twitter[^\]]*\]\([^)]+\)',
-        r'\[Share on Facebook[^\]]*\]\([^)]+\)',
+        r"\[Share on Twitter[^\]]*\]\([^)]+\)",
+        r"\[Share on Facebook[^\]]*\]\([^)]+\)",
     ]
 
     cleaned = content
     for pattern in boilerplate_patterns:
-        cleaned = re.sub(pattern, '', cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(pattern, "", cleaned, flags=re.IGNORECASE)
 
     # Clean up any double spaces or empty lines left behind
-    cleaned = re.sub(r'  +', ' ', cleaned)
-    cleaned = re.sub(r'\n\s*\n\s*\n', '\n\n', cleaned)
+    cleaned = re.sub(r"  +", " ", cleaned)
+    cleaned = re.sub(r"\n\s*\n\s*\n", "\n\n", cleaned)
 
     return cleaned
 
@@ -76,17 +74,17 @@ def _fix_relative_links(content: str, source_path: str) -> str:
             return match.group(0)
 
         # Skip anchor links
-        if link_url.startswith('#'):
+        if link_url.startswith("#"):
             return match.group(0)
 
         # For relative links, we could try to resolve them
         # For now, we'll just add a comment indicating they're relative
-        if link_url.startswith('./') or link_url.startswith('../'):
-            return f"[{link_text}]({link_url} \"Relative link from {source_path}\")"
+        if link_url.startswith("./") or link_url.startswith("../"):
+            return f'[{link_text}]({link_url} "Relative link from {source_path}")'
 
         return match.group(0)
 
     # Process markdown links
-    content = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', fix_link, content)
+    content = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", fix_link, content)
 
     return content

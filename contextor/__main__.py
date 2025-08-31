@@ -21,12 +21,20 @@ def cli(ctx):
 
 
 @cli.command()
-@click.option("--src", required=True, help="Source directory containing Markdown/MDX files")
+@click.option(
+    "--src", required=True, help="Source directory containing Markdown/MDX files"
+)
 @click.option("--out", required=True, help="Output directory for .mdc files")
-@click.option("--repo", required=True, help="Repository identifier (e.g., 'vercel/next.js')")
+@click.option(
+    "--repo", required=True, help="Repository identifier (e.g., 'vercel/next.js')"
+)
 @click.option("--ref", required=True, help="Git reference (branch or commit SHA)")
 @click.option("--topics", default="", help="Comma-separated list of topics")
-@click.option("--profile", default="balanced", help="Optimization profile: lossless, balanced, or compact")
+@click.option(
+    "--profile",
+    default="balanced",
+    help="Optimization profile: lossless, balanced, or compact",
+)
 @click.option("--config", default="", help="Configuration file path (YAML)")
 def optimize(src, out, repo, ref, topics, profile, config):
     """Convert a documentation directory to .mdc files.
@@ -38,12 +46,12 @@ def optimize(src, out, repo, ref, topics, profile, config):
     src_path = Path(src)
     out_path = Path(out)
     config_path = Path(config) if config else None
-    
+
     # Validate source directory exists
     if not src_path.exists() or not src_path.is_dir():
         logger.error("Source directory does not exist or is not a directory", src=src)
         raise click.Abort()
-    
+
     logger.info(
         "Starting contextor optimize",
         src=src,
@@ -53,12 +61,12 @@ def optimize(src, out, repo, ref, topics, profile, config):
         topics=topics,
         profile=profile,
     )
-    
+
     # Parse topics
     topic_list = []
     if topics:
         topic_list = [t.strip() for t in topics.split(",") if t.strip()]
-    
+
     # Initialize components
     loader = DocumentLoader(src_path, repo=repo, ref=ref, config_path=config_path)
     emitter = MDCEmitter(out_path)
@@ -89,7 +97,7 @@ def optimize(src, out, repo, ref, topics, profile, config):
                         "url": doc_info.canonical_url,
                         "title": doc_info.title,
                         "topics": topic_list,
-                    }
+                    },
                 )
 
                 processed += 1

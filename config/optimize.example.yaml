@@ -10,17 +10,24 @@ include:
 
 # File exclusion patterns (glob patterns)
 exclude:
-  - "**/node_modules/**"
-  - "**/.git/**"
-  - "**/dist/**"
-  - "**/build/**"
-  - "**/.next/**"
-  - "**/coverage/**"
-  - "**/__pycache__/**"
-  - "**/*.min.js"
-  - "**/*.min.css"
-  - "**/CHANGELOG.md"
-  - "**/LICENSE*"
+  - "node_modules/*"
+  - "node_modules/**/*"
+  - ".git/*"
+  - ".git/**/*"
+  - "dist/*"
+  - "dist/**/*"
+  - "build/*"
+  - "build/**/*"
+  - ".next/*"
+  - ".next/**/*"
+  - "coverage/*"
+  - "coverage/**/*"
+  - "__pycache__/*"
+  - "__pycache__/**/*"
+  - "*.min.js"
+  - "*.min.css"
+  - "CHANGELOG.md"
+  - "LICENSE*"
 
 # Default topics to apply to all files (can be overridden by CLI)
 default_topics:

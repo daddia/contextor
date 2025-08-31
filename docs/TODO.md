@@ -15,36 +15,6 @@
 
 ## Current Sprint
 
-### Sprint 1 — **Core Pipeline: Directory → MDC** → Release v0.1.0
-
-- [ ] **Discovery / File selection** (P1 · S · Status: Not started)  
-  Walk `--src`, honour include/exclude globs; support `.md` and `.mdx`.
-
-- [ ] **MDX cleaner** (P1 · M · Status: Not started)  
-  Strip `import`/`export` blocks and common JSX wrappers; preserve content semantics.
-
-- [ ] **Markdown normalisation** (P1 · S · Status: Not started)  
-  `mdformat` (+GFM): headings, code fences, tables; unify line endings and spacing.
-
-- [ ] **Link hygiene** (P1 · S · Status: Not started)  
-  Convert relative links to canonical repo URLs where possible; remove “edit this page” boilerplate.
-
-- [ ] **Token-aware compression (opt-in)** (P2 · M · Status: Not started)  
-  Elide/compact very large code/JSON blocks with clear markers; preserve summaries.
-
-- [ ] **Emitter: `.mdc` + `index.jsonl`** (P1 · S · Status: Not started)  
-  Write MDC with front-matter (`schema`, `source.repo/ref/path/url`, `title`, `topics`, `content_hash`, `fetched_at`, `slug`); append manifest.
-
-- [ ] **Deterministic slug & hashing** (P1 · S · Status: Not started)  
-  Stable slug from repo + path; `sha256` over normalised content to gate writes.
-
-- [ ] **Unit tests (pipeline)** (P2 · M · Status: Not started)  
-  MDX strip cases, link rewrite, slug/hash stability, emitter idempotency.
-
----
-
-## Backlog
-
 ### Sprint 2 — **`sourcedocs` Integration & CI** → Release v0.1.1
 
 - [ ] **Matrix GitHub Action in `sourcedocs`** (P1 · S · Status: Not started)  
@@ -87,13 +57,18 @@
 
 ---
 
-### Sprint 5 — **Enhanced Collections (Optional, Future)** → Release v0.3.0
+### Sprint 5 — **Advanced Content Intelligence** → Release v0.3.0
 
-- [ ] **Scraper plug-in (opt-in)** (P3 · L · Status: Not started)  
-  Add polite web scraping for sources without repos; same MDC output path in `sourcedocs`.
+- [ ] **Advanced Topic** Automatic topic extraction 
+  - [ ] **Topic Extraction**: from content using keywords, headings, and metadata.
+  - [ ] **Topic tagging helpers**: Derive topics from path/headings; merge with provided `--topics`.
+  - [ ] **Semantic analysis**: Extract key concepts, relationships between pages
 
-- [ ] **Site profiles & transforms** (P3 · M · Status: Not started)  
-  Per-site extraction/cleanup rules; disable by default.
+- [ ] **Cross-linking**: Suggest “related pages” in front-matter.
+  - [ ] **Duplicate detection**: Flag near-duplicate pages across sources.
+  - [ ] **Content similarity**: Detect duplicate or highly similar content
+
+- [ ] **Quality scoring**: Rate content quality, completeness, freshness
 
 ---
 
@@ -112,20 +87,12 @@
 
 ## Future Enhancement Candidates
 
-### Content Intelligence
-- [ ] **Topic tagging helpers**: Derive topics from path/headings; merge with provided `--topics`.
-- [ ] **Duplicate detection**: Flag near-duplicate pages across sources.
-- [ ] **Cross-linking**: Suggest “related pages” in front-matter.
-- [ ] **Semantic analysis**: Extract key concepts, relationships between pages
-- [ ] **Content similarity**: Detect duplicate or highly similar content
-- [ ] **Quality scoring**: Rate content quality, completeness, freshness
-- [ ] **Multi-language support**: Handle international sites, language detection
-
-### Advanced Extraction  
+### Advanced Content & Extraction  
 - [ ] **PDF extraction**: Extract content from linked PDF documents
 - [ ] **Image OCR**: Extract text from images using OCR
 - [ ] **Video transcription**: Extract transcripts from embedded videos
 - [ ] **API content**: Fetch content from REST APIs, GraphQL endpoints
+- [ ] **Multi-language support**: Handle international sites, language detection
 
 ### Workflow Integration
 - [ ] **GitHub Actions**: Pre-built actions for CI/CD integration
@@ -153,15 +120,35 @@
 ## Completed
 > Pre-pivot work retained for later phases (do not include in active backlog).
 
-### Pivot & Bootstrap
 
-- [x] **Poetry & Makefile baseline** (P1 · S · Status: Not started)  
+### **Core Pipeline: Directory → MDC** - *COMPLETE*
+
+- [x] **Discovery / File selection** (P1 · S · Status: Done)  
+  Walk `--src`, honour include/exclude globs; support `.md` and `.mdx`.
+- [x] **MDX cleaner** (P1 · M · Status: Done)  
+  Strip `import`/`export` blocks and common JSX wrappers; preserve content semantics.
+- [x] **Markdown normalisation** (P1 · S · Status: Done)  
+  `mdformat` (+GFM): headings, code fences, tables; unify line endings and spacing.
+- [x] **Link hygiene** (P1 · S · Status: Done)  
+  Convert relative links to canonical repo URLs where possible; remove "edit this page" boilerplate.
+- [x] **Token-aware compression (opt-in)** (P2 · M · Status: Done)  
+  Elide/compact very large code/JSON blocks with clear markers; preserve summaries.
+- [x] **Emitter: `.mdc` + `index.jsonl`** (P1 · S · Status: Done)  
+  Write MDC with front-matter (`schema`, `source.repo/ref/path/url`, `title`, `topics`, `content_hash`, `fetched_at`, `slug`); append manifest.
+- [x] **Deterministic slug & hashing** (P1 · S · Status: Done)  
+  Stable slug from repo + path; `sha256` over normalised content to gate writes.
+- [x] **Unit tests (pipeline)** (P2 · M · Status: Done)  
+  MDX strip cases, link rewrite, slug/hash stability, emitter idempotency.
+
+### Pivot & Bootstrap - *COMPLETE*
+
+- [x] **Poetry & Makefile baseline**
   Initialise Poetry project, lock dependencies, and add Make targets (`install`, `lint`, `fmt`, `optimize`, `test`).
-- [x] **CLI scaffold (`optimize`) with Typer** (P1 · S · Status: Not started)  
+- [x] **CLI scaffold (`optimize`) with Typer**
   `contextor optimize --src <docs_dir> --out <sourcedocs> --repo <owner/name> --ref <sha|branch> --topics …`.
-- [x] **Config file (optional) & defaults** (P2 · S · Status: Not started)  
+- [x] **Config file (optional) & defaults**
   Support `config/optimize.yaml` for include/exclude globs, per-source topics, and output scope.
-- [x] **Repo metadata capture** (P2 · S · Status: Not started)  
+- [x] **Repo metadata capture** 
   Resolve canonical GitHub URL for each file (repo, ref, path) for front-matter provenance.
 
 ### Legacy assets available — **Reusable in Phase 2 & 3** — **ARCHIVED**
@@ -228,9 +215,6 @@
 
 - [ ] **Manifest generation** (P1 · S · Status: Not started)  
   Generate site and global manifest files with metadata and indexes.
-
-- [ ] **Topic extraction** (P2 · M · Status: Not started)  
-  Automatic topic extraction from content using keywords, headings, and metadata.
 
 - [ ] **Content structure analysis** (P2 · M · Status: Not started)  
   Parse content into structured sections, headings, subsections.

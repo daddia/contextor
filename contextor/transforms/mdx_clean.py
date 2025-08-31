@@ -15,14 +15,14 @@ def clean_mdx(content: str) -> str:
     Returns:
         Cleaned content with MDX syntax removed
     """
-    lines = content.split('\n')
+    lines = content.split("\n")
     cleaned_lines = []
     in_frontmatter = False
     frontmatter_delim_count = 0
 
     for line in lines:
         # Track frontmatter boundaries
-        if line.strip() == '---':
+        if line.strip() == "---":
             frontmatter_delim_count += 1
             if frontmatter_delim_count <= 2:
                 cleaned_lines.append(line)
@@ -36,18 +36,18 @@ def clean_mdx(content: str) -> str:
             in_frontmatter = True
 
         # Remove import statements
-        if re.match(r'^\s*import\s+', line):
+        if re.match(r"^\s*import\s+", line):
             continue
 
         # Remove export statements (but keep export default for content)
-        if re.match(r'^\s*export\s+(?!default)', line):
+        if re.match(r"^\s*export\s+(?!default)", line):
             continue
 
         # Clean common JSX wrappers
         cleaned_line = _unwrap_jsx_components(line)
         cleaned_lines.append(cleaned_line)
 
-    return '\n'.join(cleaned_lines)
+    return "\n".join(cleaned_lines)
 
 
 def _unwrap_jsx_components(line: str) -> str:
@@ -56,22 +56,17 @@ def _unwrap_jsx_components(line: str) -> str:
     # Common component patterns to unwrap
     patterns = [
         # <Callout type="info">content</Callout> -> content
-        (r'<Callout[^>]*>(.*?)</Callout>', r'\1'),
-
+        (r"<Callout[^>]*>(.*?)</Callout>", r"\1"),
         # <Note>content</Note> -> content
-        (r'<Note[^>]*>(.*?)</Note>', r'\1'),
-
+        (r"<Note[^>]*>(.*?)</Note>", r"\1"),
         # <Warning>content</Warning> -> content
-        (r'<Warning[^>]*>(.*?)</Warning>', r'\1'),
-
+        (r"<Warning[^>]*>(.*?)</Warning>", r"\1"),
         # <Details summary="title">content</Details> -> content
-        (r'<Details[^>]*>(.*?)</Details>', r'\1'),
-
+        (r"<Details[^>]*>(.*?)</Details>", r"\1"),
         # Self-closing components - remove entirely
-        (r'<[A-Z][a-zA-Z0-9]*[^>]*\s*/>', ''),
-
+        (r"<[A-Z][a-zA-Z0-9]*[^>]*\s*/>", ""),
         # Simple wrapper components
-        (r'<([A-Z][a-zA-Z0-9]*)[^>]*>(.*?)</\1>', r'\2'),
+        (r"<([A-Z][a-zA-Z0-9]*)[^>]*>(.*?)</\1>", r"\2"),
     ]
 
     cleaned = line

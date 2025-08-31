@@ -34,9 +34,9 @@ def _compress_code_blocks(content: str, aggressive: bool) -> str:
     def compress_block(match):
         fence_start = match.group(1)  # ```language
         code_content = match.group(2)
-        fence_end = match.group(3)    # ```
+        fence_end = match.group(3)  # ```
 
-        lines = code_content.split('\n')
+        lines = code_content.split("\n")
 
         # Only compress if block is large
         threshold = 15 if aggressive else 25
@@ -56,12 +56,12 @@ def _compress_code_blocks(content: str, aggressive: bool) -> str:
 
         summary = f"\n// ... ({omitted_lines} lines omitted for brevity) ...\n"
 
-        compressed_content = '\n'.join(start_lines) + summary + '\n'.join(end_lines)
+        compressed_content = "\n".join(start_lines) + summary + "\n".join(end_lines)
 
         return f"{fence_start}{compressed_content}{fence_end}"
 
     # Match code blocks
-    pattern = r'(```[\w+-]*\n)(.*?)(```)'
+    pattern = r"(```[\w+-]*\n)(.*?)(```)"
     return re.sub(pattern, compress_block, content, flags=re.DOTALL)
 
 
@@ -75,11 +75,13 @@ def _compress_json_blocks(content: str, aggressive: bool) -> str:
 
         # Check if this looks like JSON
         json_content_stripped = json_content.strip()
-        if not (json_content_stripped.startswith(('{', '[')) and
-                json_content_stripped.endswith(('}', ']'))):
+        if not (
+            json_content_stripped.startswith(("{", "["))
+            and json_content_stripped.endswith(("}", "]"))
+        ):
             return match.group(0)
 
-        lines = json_content.split('\n')
+        lines = json_content.split("\n")
         threshold = 10 if aggressive else 20
 
         if len(lines) <= threshold:
@@ -93,27 +95,27 @@ def _compress_json_blocks(content: str, aggressive: bool) -> str:
         total_lines = len(lines)
         omitted_lines = total_lines - keep_lines
 
-        summary = f'  // ... ({omitted_lines} more lines) ...\n'
-        if json_content_stripped.endswith('}'):
-            summary += '}'
-        elif json_content_stripped.endswith(']'):
-            summary += ']'
+        summary = f"  // ... ({omitted_lines} more lines) ...\n"
+        if json_content_stripped.endswith("}"):
+            summary += "}"
+        elif json_content_stripped.endswith("]"):
+            summary += "]"
 
-        compressed_content = '\n'.join(start_lines) + '\n' + summary
+        compressed_content = "\n".join(start_lines) + "\n" + summary
 
         return f"{fence_start}{compressed_content}{fence_end}"
 
     # Match JSON code blocks
-    pattern = r'(```(?:json|jsonc?)\n)(.*?)(```)'
+    pattern = r"(```(?:json|jsonc?)\n)(.*?)(```)"
     return re.sub(pattern, compress_json, content, flags=re.DOTALL | re.IGNORECASE)
 
 
 def _compress_whitespace(content: str) -> str:
     """Compress excessive whitespace while preserving structure."""
     # Limit consecutive blank lines to 2
-    content = re.sub(r'\n{4,}', '\n\n\n', content)
+    content = re.sub(r"\n{4,}", "\n\n\n", content)
 
     # Remove trailing spaces
-    content = re.sub(r'[ \t]+$', '', content, flags=re.MULTILINE)
+    content = re.sub(r"[ \t]+$", "", content, flags=re.MULTILINE)
 
     return content

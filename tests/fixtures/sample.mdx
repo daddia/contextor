@@ -1,0 +1,34 @@
+---
+title: MDX Sample
+description: A sample MDX file
+---
+
+import { Callout } from '@/components/Callout'
+import { Warning } from '@/components/Warning'
+export const metadata = { title: 'MDX Sample' }
+
+# MDX Sample File
+
+This is an MDX file with various components.
+
+<Callout type="info">
+This is an informational callout that should be cleaned.
+</Callout>
+
+## Code Example
+
+```jsx
+function MyComponent() {
+  return <div>Hello World</div>;
+}
+```
+
+<Warning>
+This is a warning that should be preserved as text.
+</Warning>
+
+<Details summary="Click to expand">
+Hidden content here.
+</Details>
+
+Regular markdown content continues here.
