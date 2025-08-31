@@ -1,0 +1,226 @@
+---
+id: "llm-markdown-rules"
+title: "LLM-friendly Markdown Rules"
+scope: ["**/*.md", "**/*.mdx"]   # Intentionally excludes .mdc so rules file won't self-flag
+version: "1.0.1"
+updated: "2025-08-31"
+owner: "Contextor"
+status: "approved"
+tags: ["markdown", "llm", "docs", "lint"]
+---
+
+# LLM-friendly Markdown Rules
+
+> Each <rule> block declares a machine-checkable intent. Parsers may ignore unknown fields.
+
+<ruleset>
+
+<rule>
+id: md.front_matter.required
+description: "Docs include YAML front matter with canonical metadata."
+severity: error
+applies: file
+must:
+  keys: ["title","canonical_id","version","updated","owner","status","tags","source_url"]
+fix: "Add YAML front matter with the required keys."
+examples:
+  ok: |
+    ---
+    title: "Payments API"
+    canonical_id: "DOC-PA-001"
+    version: "1.2.0"
+    updated: "2025-08-31"
+    owner: "Payments"
+    status: "approved"
+    tags: ["api","payments"]
+    source_url: "https://example.com/docs/payments"
+    ---
+  bad: "Missing `canonical_id` and `updated`."
+</rule>
+
+<rule>
+id: md.heading.one_h1
+description: "Exactly one H1 using ATX style."
+severity: error
+applies: headings
+must:
+  atx: true
+  one_h1: true
+must_not:
+  setext: true
+fix: "Use a single `# Title` at the top; convert setext to ATX."
+</rule>
+
+<rule>
+id: md.section.summary_required
+description: "A Summary section (3–6 bullets) appears near the top."
+severity: warning
+applies: sections
+must:
+  heading: "^Summary$"
+  bullets_min: 3
+  bullets_max: 6
+fix: "Add `## Summary` with concise bullets of purpose, scope, key decisions, risks."
+</rule>
+
+<rule>
+id: md.sections.atomic
+description: "Sections are semantic and self-contained (200–500 tokens target)."
+severity: advisory
+applies: sections
+guidance:
+  tokens_min: 200
+  tokens_max: 500
+note: "Aim for retrieval-friendly chunks; split mixed topics."
+</rule>
+
+<rule>
+id: md.style.lists_and_paras
+description: "Short paragraphs (≤4 lines). Facts use bullets; procedures use ordered lists."
+severity: warning
+applies: body
+guidance:
+  paragraph_lines_max: 4
+fix: "Break walls of text; prefer lists for facts and numbered steps for procedures."
+</rule>
+
+<rule>
+id: md.format.no_inline_html
+description: "Avoid inline HTML and footnotes; use plain Markdown."
+severity: error
+applies: body
+must_not:
+  patterns: ["<[^>]+>", "\\[\\^[^\\]]+\\]"]
+exceptions:
+  html: ["<br>"]  # allow rare explicit line breaks if necessary
+fix: "Replace HTML with Markdown; move footnote text inline."
+</rule>
+
+<rule>
+id: md.tables.simple
+description: "Keep tables simple; prefer lists for complex data."
+severity: warning
+applies: tables
+must:
+  cols_max: 6
+  rows_max: 30
+fix: "Refactor wide/long tables into lists or multiple smaller tables."
+</rule>
+
+<rule>
+id: md.code.fenced_with_language
+description: "Fenced code blocks declare a language and are valid/runnable when feasible."
+severity: error
+applies: code
+must:
+  fenced: true
+  language: true
+must_not:
+  placeholders: ["...","<snip>","TBD","???"]
+fix: "Add a language hint (e.g., ```json); remove placeholders; provide minimal runnable examples."
+</rule>
+
+<rule>
+id: md.code.examples.io
+description: "Provide input/output and one negative example where relevant."
+severity: warning
+applies: code
+must:
+  blocks: ["Input","Output","Negative example"]
+fix: "Add example I/O blocks demonstrating success and failure."
+</rule>
+
+<rule>
+id: md.links.descriptive
+description: "Links use descriptive text; bare URLs are discouraged."
+severity: warning
+applies: links
+must_not:
+  bare_urls: true
+fix: "Replace raw URLs with `[text](url)`; include stable IDs near moving targets."
+</rule>
+
+<rule>
+id: md.images.alt_text
+description: "Images include meaningful alt text."
+severity: error
+applies: images
+must:
+  alt_text: true
+fix: "Add concise alt text describing the image’s information content."
+</rule>
+
+<rule>
+id: md.dates.iso8601
+description: "Dates and times use ISO formats."
+severity: error
+applies: body
+must:
+  date_pattern: "\\b\\d{4}-\\d{2}-\\d{2}\\b"
+  time_pattern: "\\b\\d{2}:\\d{2}(?::\\d{2})?Z?\\b"
+must_not:
+  month_names: true
+fix: "Write dates as YYYY-MM-DD and times as HH:MMZ."
+</rule>
+
+<rule>
+id: md.terminology.consistency
+description: "Use consistent terminology and list synonyms once."
+severity: warning
+applies: sections
+must:
+  heading: "^(Definitions|Glossary)$"
+fix: "Add a Definitions section with preferred terms and synonyms."
+</rule>
+
+<rule>
+id: md.policy.blocks
+description: "Normative instructions live in fenced `policy`/`instruction` blocks."
+severity: warning
+applies: code
+must:
+  info_strings_any: ["policy","instruction"]
+fix: "Move rules into ```policy or ```instruction blocks for reliable extraction."
+</rule>
+
+<rule>
+id: md.qna.blocks
+description: "Optional Q&A included in fenced `qna` blocks for common queries."
+severity: advisory
+applies: code
+must:
+  info_strings_any: ["qna"]
+fix: "Add a `qna` block with frequent Q&A where beneficial."
+</rule>
+
+<rule>
+id: md.versioning.changelog
+description: "A Change log section exists with date, summary, author."
+severity: warning
+applies: sections
+must:
+  heading: "^Change log$"
+fix: "Append `## Change log` with bullet entries like `YYYY-MM-DD — change — (AB)`."
+</rule>
+
+<rule>
+id: md.placeholders.forbidden
+description: "Ambiguous placeholders are forbidden."
+severity: error
+applies: body
+must_not:
+  patterns: ["\\bTBD\\b","\\?\\?\\?","\\[\\s*REVIEW\\s*\\]","<placeholder>"]
+fix: "Use explicit markers like `{{PLACEHOLDER}}` or state what’s unknown."
+</rule>
+
+<rule>
+id: md.ids.canonical
+description: "Stable `canonical_id` appears in front matter and near the title."
+severity: warning
+applies: headings
+must:
+  mention_near_h1: true
+fix: "Echo `[ID: XXX]` near the H1 for deterministic mapping."
+</rule>
+
+</ruleset>

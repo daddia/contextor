@@ -1,0 +1,47 @@
+---
+description: Python dependency management and version standards
+globs: pyproject.toml,poetry.lock,requirements*.txt
+alwaysApply: false
+---
+
+# Python Dependency Management Standards
+
+## Core Rules
+
+### Dependency Management
+- **MUST** use Poetry with `pyproject.toml` + `poetry.lock`
+- **MUST** target Python 3.13+ (`python = "^3.13"`)
+- **MUST** consolidate all tool config in `pyproject.toml` under `[tool.*]`
+- **NO** `setup.py`, `requirements.txt`, `Pipfile`, or split configs
+
+### Version Strategy
+- **Runtime deps**: Use caret ranges (`^2.31.0`)
+- **Dev tools**: Keep at latest stable versions
+- **Lockfile**: Must be current (`poetry lock --check` in CI)
+
+### Required Tools
+- **ruff**: Linting + formatting (replaces flake8, black, isort)
+- **mypy**: Type checking
+- **pytest**: Testing
+- **pre-commit**: Git hooks
+
+## Commands
+```bash
+# Setup
+poetry install --sync
+
+# Add dependencies
+poetry add requests              # runtime
+poetry add --group dev ruff      # development
+
+# Maintenance
+poetry update                    # monthly
+poetry lock --check             # CI verification
+```
+
+## MCP Server Context
+When building MCP servers:
+- Use `mcp` package for protocol compliance
+- Pin `python = "^3.11"` minimum for MCP compatibility
+- Include serverless extras: `boto3`, `starlette` as optional dependencies
+- Use `poetry export` for serverless deployment requirements

@@ -1,0 +1,99 @@
+---
+globs: "**/*.py,**/*.ts,**/*.js,**/*.go,**/*.java,**/*.cs,**/Dockerfile,**/*.yaml,**/*.yml,**/*.json"
+description: Code rules, quality gates, and CI/CD enforcement standards
+---
+
+# Code Standards & Quality Gates
+
+This project enforces strict development standards through automated CI/CD pipelines and agent-driven workflows.
+
+## Non-Negotiable Requirements (Merge Blockers)
+
+### Code Quality Gates
+- **PR-001**: PRs ≤ 400 changed lines (excludes generated code)
+- **PR-002**: ≥70% line coverage baseline, ≥80% for new code
+- **PR-003**: Zero formatting diffs after auto-fix
+- **PR-004**: Zero linting errors, warnings triaged
+
+### Security & Compliance
+- **SEC-001**: Pass SAST + SCA + secrets scanning
+- **SEC-002**: No plaintext secrets in code/configs/tests
+- **SEC-003**: Pinned dependency versions, justified additions
+
+### Contract & API Standards
+- **API-001**: No breaking changes without version bump
+- **API-002**: Expand/contract pattern for DB migrations
+
+### Build & Deployment
+- **BUILD-001**: Reproducible builds with SBOM attached
+- **BUILD-002**: Full CI pipeline green on branch and PR
+
+## Risk-Based Quality Adjustments
+
+### Low Risk Changes
+- Single human reviewer + CODEOWNERS approval
+- Auto-approve architecture/security if policies pass
+- Standard merge timeline
+
+### Medium Risk Changes  
+- Two reviewers (owner + additional)
+- Human architect sign-off required
+- Performance smoke tests required
+
+### High Risk Changes
+- Two reviewers + Architect + Security approval
+- Formal architecture and security review
+- Change approval board sign-off
+
+## Agent Integration Points
+
+### Code Review Agent (Agent E)
+- PR size validation (400-line limit)
+- Test coverage analysis and enforcement
+- Static analysis result aggregation
+- Security findings with remediation guidance
+
+### Test & QA Agent (Agent G)  
+- Coverage calculation and validation
+- Flaky test detection and quarantine
+- Performance test execution and analysis
+- Multi-service integration test orchestration
+
+### Security Agent (Agent H)
+- Vulnerability scanning and triage
+- Secrets detection and prevention
+- Dependency risk assessment
+- Policy compliance validation (OPA/Conftest)
+
+### Release Agent (Agent I)
+- Build validation and SBOM verification
+- Artifact signing and provenance
+- Deployment readiness validation
+- Rollback mechanism testing
+
+## CI/CD Enforcement Matrix
+
+Required status checks for all PRs:
+- `format` - No diffs after auto-fix
+- `lint` - Zero errors, warnings triaged  
+- `type-check` - Zero type errors
+- `unit-tests` - All pass, coverage met
+- `security-scan` - No Critical/High vulnerabilities
+- `contract-validation` - No breaking changes
+- `build-and-sbom` - Successful build with SBOM
+
+## Exception & Waiver Process
+
+All waivers MUST include:
+- Risk description and impact assessment
+- Compensating controls and mitigations
+- Responsible owner and expiry date
+- Follow-up Jira ticket for resolution
+
+Approval authority:
+- Technical waivers: Tech Lead
+- Security waivers: Security team
+- Performance waivers: Performance team
+- High-risk waivers: Architecture review board
+
+Reference [development-rules.mdc](/development-rules.mdc) for complete standards.

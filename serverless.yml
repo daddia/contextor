@@ -1,0 +1,167 @@
+# AWS SAM Template for Contextor MCP Server
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: >
+  Contextor MCP Server - Serverless deployment for web content extraction and processing
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: python3.11
+    Environment:
+      Variables:
+        LOG_LEVEL: INFO
+        STORAGE_BUCKET: !Ref StorageBucket
+        CACHE_TTL: 86400  # 24 hours
+
+Parameters:
+  ApiKeyParameter:
+    Type: String
+    Description: API key for authentication
+    NoEcho: true
+    Default: ""
+
+Resources:
+  # Main Lambda Function
+  ContextorMCPFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: contextor-mcp-server
+      CodeUri: contextor/
+      Handler: serverless.lambda_handler.async_lambda_handler
+      Description: MCP Server for Contextor
+      Environment:
+        Variables:
+          ASYNC_HANDLER: "true"
+          API_KEY: !Ref ApiKeyParameter
+      Events:
+        # API Gateway Events
+        ListTools:
+          Type: Api
+          Properties:
+            Path: /mcp/tools
+            Method: GET
+        
+        ExecuteTool:
+          Type: Api
+          Properties:
+            Path: /mcp/tools/{tool}
+            Method: POST
+        
+        ListResources:
+          Type: Api
+          Properties:
+            Path: /mcp/resources
+            Method: GET
+        
+        BatchExecute:
+          Type: Api
+          Properties:
+            Path: /mcp/batch
+            Method: POST
+        
+        HealthCheck:
+          Type: Api
+          Properties:
+            Path: /health
+            Method: GET
+      
+      # Lambda Layers for dependencies
+      Layers:
+        - !Ref DependenciesLayer
+      
+      # Permissions
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref StorageBucket
+        - Statement:
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: "*"
+
+  # Dependencies Layer
+  DependenciesLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: contextor-dependencies
+      Description: Python dependencies for Contextor
+      ContentUri: dependencies/
+      CompatibleRuntimes:
+        - python3.11
+      RetentionPolicy: Delete
+    Metadata:
+      BuildMethod: python3.11
+      BuildArchitecture: x86_64
+
+  # S3 Storage Bucket
+  StorageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'contextor-storage-${AWS::AccountId}'
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldVersions
+            Status: Enabled
+            NoncurrentVersionExpirationInDays: 30
+          - Id: TransitionToIA
+            Status: Enabled
+            Transitions:
+              - StorageClass: STANDARD_IA
+                TransitionInDays: 30
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  # CloudWatch Log Group
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${ContextorMCPFunction}'
+      RetentionInDays: 7
+
+  # API Gateway API Key (optional)
+  ApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: contextor-api-key
+      Description: API key for Contextor MCP Server
+      Enabled: true
+
+  # Usage Plan
+  UsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      UsagePlanName: contextor-usage-plan
+      Description: Usage plan for Contextor API
+      Throttle:
+        RateLimit: 100  # requests per second
+        BurstLimit: 200
+      Quota:
+        Limit: 10000  # requests per day
+        Period: DAY
+
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
+  
+  FunctionArn:
+    Description: Lambda Function ARN
+    Value: !GetAtt ContextorMCPFunction.Arn
+  
+  StorageBucketName:
+    Description: S3 Storage Bucket Name
+    Value: !Ref StorageBucket
+  
+  ApiKeyId:
+    Description: API Key ID
+    Value: !Ref ApiKey

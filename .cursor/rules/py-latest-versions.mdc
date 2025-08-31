@@ -1,0 +1,123 @@
+---
+globs: pyproject.toml,requirements*.txt
+alwaysApply: false
+---
+# Latest Stable Python Package Versions
+
+*As at August 2025*
+
+## Core Python & Package Managers
+- **Python**: `3.13.1` (latest stable)
+- **Poetry**: `1.8.4` (dependency management)
+- **uv**: `0.5.8` (fast Python package installer)
+- **pip**: `24.3.1` (package installer)
+- **pipx**: `1.7.1` (isolated CLI tools)
+
+## Development Tools
+- **ruff**: `0.8.4` (linting + formatting)
+- **black**: `24.10.0` (code formatting)
+- **isort**: `5.13.2` (import sorting)
+- **mypy**: `1.13.0` (type checking)
+- **pre-commit**: `4.0.1` (git hooks)
+
+## Testing & Coverage
+- **pytest**: `8.3.3` (testing framework)
+- **pytest-cov**: `6.0.0` (coverage plugin)
+- **pytest-asyncio**: `0.24.0` (async testing)
+- **coverage**: `7.6.9` (coverage measurement)
+- **tox**: `4.23.2` (testing automation)
+
+## Web & HTTP Libraries
+- **requests**: `2.32.3` (HTTP library)
+- **httpx**: `0.27.2` (async HTTP client)
+- **aiohttp**: `3.11.10` (async web framework)
+- **urllib3**: `2.2.3` (HTTP client)
+
+## Data & Serialization
+- **pydantic**: `2.10.3` (data validation)
+- **PyYAML**: `6.0.2` (YAML parser)
+- **python-dotenv**: `1.0.1` (environment variables)
+- **tomlkit**: `0.13.2` (TOML parser)
+- **orjson**: `3.10.12` (fast JSON library)
+
+## CLI & User Interface
+- **click**: `8.1.7` (command line interface)
+- **typer**: `0.15.1` (modern CLI framework)
+- **rich**: `13.9.4` (rich text and beautiful formatting)
+- **textual**: `0.87.1` (TUI framework)
+
+## Database & ORM
+- **SQLAlchemy**: `2.0.36` (SQL toolkit and ORM)
+- **alembic**: `1.14.0` (database migrations)
+- **psycopg2-binary**: `2.9.10` (PostgreSQL adapter)
+- **asyncpg**: `0.30.0` (async PostgreSQL driver)
+
+## Web Frameworks
+- **FastAPI**: `0.115.6` (modern web API framework)
+- **Django**: `5.1.4` (high-level web framework)
+- **Flask**: `3.1.0` (micro web framework)
+- **Starlette**: `0.41.3` (lightweight ASGI framework)
+
+## Async & Concurrency
+- **asyncio**: Built-in (Python 3.13+)
+- **trio**: `0.27.0` (async library)
+- **anyio**: `4.7.0` (async compatibility layer)
+
+## Scientific & Data
+- **numpy**: `2.1.3` (numerical computing)
+- **pandas**: `2.2.3` (data analysis)
+- **matplotlib**: `3.9.2` (plotting)
+- **scipy**: `1.14.1` (scientific computing)
+
+## AI & Machine Learning
+- **openai**: `1.58.1` (OpenAI API client)
+- **anthropic**: `0.40.0` (Anthropic API client)
+- **langchain**: `0.3.9` (LLM application framework)
+- **transformers**: `4.47.1` (Hugging Face transformers)
+
+## Logging & Monitoring
+- **structlog**: `24.4.0` (structured logging)
+- **loguru**: `0.7.2` (simplified logging)
+- **sentry-sdk**: `2.19.2` (error tracking)
+
+## Security & Authentication
+- **cryptography**: `43.0.3` (cryptographic library)
+- **PyJWT**: `2.10.1` (JSON Web Token)
+- **passlib**: `1.7.4` (password hashing)
+
+## Serverless & Cloud
+- **boto3**: `1.35.75` (AWS SDK)
+- **azure-identity**: `1.19.0` (Azure authentication)
+- **google-cloud-core**: `2.4.1` (Google Cloud)
+
+## Development Utilities
+- **python-dateutil**: `2.9.0.post0` (date utilities)
+- **packaging**: `24.2` (package utilities)
+- **setuptools**: `75.6.0` (build tools)
+- **wheel**: `0.45.1` (binary package format)
+
+## Usage in pyproject.toml
+
+### For Production Dependencies
+```toml
+[tool.poetry.dependencies]
+python = "^3.13"
+fastapi = "^0.115.0"
+pydantic = "^2.10.0"
+requests = "^2.32.0"
+```
+
+### For Development Dependencies  
+```toml
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.8.0"
+mypy = "^1.13.0"
+pytest = "^8.3.0"
+pre-commit = "^4.0.0"
+```
+
+### Version Constraint Guidelines
+- **Caret (`^`)**: `^1.2.3` → `>=1.2.3, <2.0.0` (recommended)
+- **Tilde (`~`)**: `~1.2.3` → `>=1.2.3, <1.3.0` (patch updates only)
+- **Exact**: `==1.2.3` (only for specific compatibility needs)
+- **Minimum**: `>=1.2.3` (when you need at least this version)
