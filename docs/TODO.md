@@ -17,8 +17,8 @@
 
 ### Sprint 3 — **Advanced Content Intelligence** → Release v0.3.0
 
-- [ ] **Advanced Topic** Automatic topic extraction 
-  - [ ] **Topic Extraction**: from content using keywords, headings, and metadata.
+- [x] **Advanced Topic** Automatic topic extraction 
+  - [x] **Topic Extraction**: from content using keywords, headings, and metadata.
   - [ ] **Topic tagging helpers**: Derive topics from path/headings; merge with provided `--topics`.
   - [ ] **Semantic analysis**: Extract key concepts, relationships between pages
 
@@ -59,6 +59,7 @@
 - [ ] **Pre-commit, lint, format** (P2 · S · Status: Not started)  
   `ruff` checks & `ruff format`; enforce in CI.
 
+--
 
 ### Phase 1 Milestone — **Full End to End Test** → Release v1.0.0
 

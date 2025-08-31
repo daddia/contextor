@@ -233,6 +233,127 @@ def optimize(src, out, repo, ref, topics, profile, project_config, auto_detect_c
         raise click.Abort()
 
 
+@cli.command()
+@click.option(
+    "--source-dir", 
+    required=True, 
+    help="Directory containing .mdc files to analyze"
+)
+@click.option(
+    "--features",
+    default="topic-extraction,cross-linking,quality-scoring,duplicate-detection",
+    help="Comma-separated list of features to enable"
+)
+@click.option(
+    "--config",
+    default="",
+    help="Path to intelligence configuration YAML file"
+)
+@click.option(
+    "--incremental/--full",
+    default=True,
+    help="Run incremental analysis (skip unchanged files)"
+)
+@click.option(
+    "--metrics-output",
+    default="",
+    help="Output path for analysis metrics JSON"
+)
+def intelligence(source_dir, features, config, incremental, metrics_output):
+    """Run Advanced Content Intelligence analysis on .mdc files.
+    
+    This command analyzes existing .mdc files to extract topics, identify
+    relationships, detect duplicates, and assess content quality.
+    """
+    try:
+        # Import intelligence module (optional dependency)
+        from .intelligence import IntelligenceAnalyzer
+    except ImportError as e:
+        logger.error(
+            "Intelligence analysis requires optional dependencies. "
+            "Install with: pip install contextor[intelligence]",
+            error=str(e)
+        )
+        raise click.Abort()
+    
+    source_path = Path(source_dir)
+    
+    # Validate source directory exists
+    if not source_path.exists() or not source_path.is_dir():
+        logger.error("Source directory does not exist or is not a directory", 
+                    source_dir=source_dir)
+        raise click.Abort()
+        
+    # Check for .mdc files
+    mdc_files = list(source_path.rglob("*.mdc"))
+    if not mdc_files:
+        logger.error("No .mdc files found in source directory", 
+                    source_dir=source_dir)
+        raise click.Abort()
+        
+    # Parse features
+    feature_set = set()
+    if features:
+        feature_set = {f.strip() for f in features.split(",") if f.strip()}
+        
+    # Load configuration if provided
+    analysis_config = {}
+    if config:
+        config_path = Path(config)
+        if config_path.exists():
+            try:
+                import yaml
+                with open(config_path, encoding="utf-8") as f:
+                    analysis_config = yaml.safe_load(f) or {}
+                logger.info("Loaded intelligence configuration", config_path=config)
+            except Exception as e:
+                logger.error("Failed to load configuration", 
+                           config_path=config, error=str(e))
+                raise click.Abort()
+        else:
+            logger.warning("Configuration file not found", config_path=config)
+            
+    logger.info(
+        "Starting intelligence analysis",
+        source_dir=source_dir,
+        features=list(feature_set),
+        incremental=incremental,
+        mdc_files=len(mdc_files)
+    )
+    
+    # Initialize and run analyzer
+    try:
+        analyzer = IntelligenceAnalyzer(source_path, analysis_config)
+        results = analyzer.analyze(features=feature_set, incremental=incremental)
+        
+        logger.info(
+            "Intelligence analysis complete",
+            processed=results.get("processed", 0),
+            updated=results.get("updated", 0),
+            skipped=results.get("skipped", 0),
+            errors=results.get("errors", 0)
+        )
+        
+        # Write metrics if requested
+        if metrics_output:
+            metrics_path = Path(metrics_output)
+            try:
+                metrics_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(metrics_path, "w", encoding="utf-8") as f:
+                    json.dump(results, f, indent=2)
+                logger.info("Analysis metrics written", path=metrics_output)
+            except Exception as e:
+                logger.error("Failed to write metrics", 
+                           path=metrics_output, error=str(e))
+                
+        if results.get("errors", 0) > 0:
+            raise click.Abort()
+            
+    except Exception as e:
+        logger.error("Intelligence analysis failed", error=str(e))
+        raise click.Abort()
+
+
 def main():
     """Entry point for the CLI."""
     cli()

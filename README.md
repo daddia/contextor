@@ -61,7 +61,25 @@ git diff --cached --quiet || git commit -m "chore(context): refresh MDC" && git 
 ```
 
 **You're ready to go!** The `.mdc` files now live in `sourcedocs/{source-slug}/` and can be consumed by agents (e.g. Promptman).
-*In Phase 2 you’ll run the MCP server to serve these files; in Phase 3 you may add optional scraping.*
+
+5. **Optional: Run Advanced Content Intelligence**
+
+```bash
+# Install intelligence dependencies
+poetry install --extras intelligence
+
+# Run intelligence analysis on the generated .mdc files
+cd ../sourcedocs
+poetry run contextor intelligence \
+  --source-dir {source-slug} \
+  --features topic-extraction,cross-linking,quality-scoring,duplicate-detection
+
+# Commit enhanced results
+git add {source-slug}
+git diff --cached --quiet || git commit -m "feat: add content intelligence" && git push
+```
+
+*In Phase 2 you'll run the MCP server to serve these files; in Phase 3 you may add optional scraping.*
 
 ---
 

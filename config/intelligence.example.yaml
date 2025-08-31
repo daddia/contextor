@@ -1,0 +1,24 @@
+# Advanced Content Intelligence Configuration
+# This file configures the intelligence analysis features
+
+# Topic Extraction Configuration
+topic_extraction:
+  max_topics: 10                    # Maximum topics to extract per document
+  min_frequency: 2                  # Minimum word frequency to consider as topic
+  
+# Cross-linking Configuration  
+cross_linking:
+  max_related_documents: 5          # Maximum related documents to suggest
+  topic_overlap_threshold: 0.3      # Minimum topic overlap for relationships
+  relevance_threshold: 0.4          # Minimum relevance score for suggestions
+
+# Quality Scoring Configuration
+quality_scoring:
+  completeness_weight: 0.4          # Weight for completeness score
+  freshness_weight: 0.3             # Weight for freshness score  
+  clarity_weight: 0.3               # Weight for clarity score
+
+# Similarity Analysis Configuration
+similarity:
+  similarity_threshold: 0.8         # Threshold for similar documents
+  duplicate_threshold: 0.95         # Threshold for duplicate detection
