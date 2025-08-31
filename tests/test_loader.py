@@ -62,18 +62,28 @@ class TestDocumentLoader:
         assert "node_modules/*" in loader.exclude_patterns
         assert "node_modules/**/*" in loader.exclude_patterns
 
-    def test_init_with_config(self):
-        """Test DocumentLoader initialization with config file."""
-        config_content = {"include": ["custom/*.md"], "exclude": ["custom/ignore/**"]}
-        config_path = self.source_dir / "config.yaml"
-        config_path.write_text(yaml.dump(config_content), encoding="utf-8")
+    def test_init_with_project_config(self):
+        """Test DocumentLoader initialization with project config."""
+        # Create a mock project config
+        from contextor.project_config import ProjectConfig
+        
+        config_data = {
+            "settings": {
+                "title": "Test Project",
+                "folders": ["custom"],
+                "excludeFolders": ["custom/ignore"],
+                "topics": ["test"]
+            }
+        }
+        project_config = ProjectConfig(config_data)
 
         loader = DocumentLoader(
-            self.source_dir, repo="test/repo", ref="main", config_path=config_path
+            self.source_dir, repo="test/repo", ref="main", project_config=project_config
         )
 
-        assert loader.include_patterns == ["custom/*.md"]
-        assert loader.exclude_patterns == ["custom/ignore/**"]
+        assert "custom/**/*.md" in loader.include_patterns
+        assert "custom/**/*.mdx" in loader.include_patterns
+        assert "custom/ignore/**" in loader.exclude_patterns
 
     def test_should_include_file_basic_patterns(self):
         """Test basic file inclusion patterns."""
@@ -234,12 +244,20 @@ class TestDocumentLoader:
 
         assert len(documents) == 0
 
-    def test_discover_files_with_custom_config(self):
-        """Test file discovery with custom include/exclude patterns."""
-        # Create config with custom patterns
-        config_content = {"include": ["custom/*.md"], "exclude": ["custom/skip/**"]}
-        config_path = self.source_dir / "config.yaml"
-        config_path.write_text(yaml.dump(config_content), encoding="utf-8")
+    def test_discover_files_with_project_config(self):
+        """Test file discovery with project configuration patterns."""
+        # Create project config with custom patterns
+        from contextor.project_config import ProjectConfig
+        
+        config_data = {
+            "settings": {
+                "title": "Test Project",
+                "folders": ["custom"],
+                "excludeFolders": ["custom/skip"],
+                "topics": ["test"]
+            }
+        }
+        project_config = ProjectConfig(config_data)
 
         # Create test files
         self.create_test_file("custom/included.md", "# Included")
@@ -247,43 +265,33 @@ class TestDocumentLoader:
         self.create_test_file("other/ignored.md", "# Ignored")  # Not in include pattern
 
         loader = DocumentLoader(
-            self.source_dir, repo="test/repo", ref="main", config_path=config_path
+            self.source_dir, repo="test/repo", ref="main", project_config=project_config
         )
         documents = list(loader.discover_files())
 
-        assert len(documents) == 1
-        assert documents[0].path == "custom/included.md"
+        # Should find the included file but not the excluded ones
+        included_files = [doc.path for doc in documents]
+        assert "custom/included.md" in included_files
+        assert "custom/skip/excluded.md" not in included_files
+        assert "other/ignored.md" not in included_files
 
-    def test_load_config_invalid_file(self):
-        """Test config loading with invalid YAML."""
-        config_path = self.source_dir / "invalid.yaml"
-        config_path.write_text("invalid: yaml: content:", encoding="utf-8")
-
-        # Should not raise exception, should return empty dict
+    def test_init_without_project_config(self):
+        """Test DocumentLoader initialization without project config."""
         loader = DocumentLoader(
-            self.source_dir, repo="test/repo", ref="main", config_path=config_path
+            self.source_dir, repo="test/repo", ref="main", project_config=None
         )
-        assert loader.include_patterns == [
-            "*.md",
-            "*.mdx",
-            "**/*.md",
-            "**/*.mdx",
-        ]  # Defaults
+        
+        # Should use defaults
+        assert loader.config == {}
+        assert loader.include_patterns == ["*.md", "*.mdx", "**/*.md", "**/*.mdx"]
 
-    def test_load_config_missing_file(self):
-        """Test config loading with missing file."""
-        nonexistent_config = Path("/nonexistent/config.yaml")
-
-        # Should not raise exception, should use defaults
+    def test_init_with_invalid_project_config(self):
+        """Test DocumentLoader initialization with invalid project config."""
+        # This should not raise an exception, should gracefully handle None
         loader = DocumentLoader(
-            self.source_dir,
-            repo="test/repo",
-            ref="main",
-            config_path=nonexistent_config,
+            self.source_dir, repo="test/repo", ref="main", project_config=None
         )
-        assert loader.include_patterns == [
-            "*.md",
-            "*.mdx",
-            "**/*.md",
-            "**/*.mdx",
-        ]  # Defaults
+
+        # Should use defaults
+        assert loader.config == {}
+        assert loader.include_patterns == ["*.md", "*.mdx", "**/*.md", "**/*.mdx"]

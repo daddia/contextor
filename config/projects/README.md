@@ -1,6 +1,6 @@
 # Project Configurations
 
-This directory contains JSON project configurations that align with Context7's advanced configuration structure. These configurations provide comprehensive metadata and settings for processing documentation from popular open-source projects.
+This directory contains JSON project configurations that align with evolving standard advanced configuration structure. These configurations provide comprehensive metadata and settings for processing documentation from popular open-source projects.
 
 ## Configuration Structure
 
@@ -82,6 +82,23 @@ poetry run contextor optimize \
   --topics "custom,topics"
 ```
 
+### Automatic Config Detection
+
+Contextor automatically detects standards-based config files in source repositories:
+
+```bash
+# Auto-detection enabled by default
+poetry run contextor optimize \
+  --src /path/to/docs \
+  --out /path/to/output
+
+# Disable auto-detection
+poetry run contextor optimize \
+  --src /path/to/docs \
+  --out /path/to/output \
+  --no-auto-detect-config
+```
+
 ### GitHub Actions Integration
 
 The matrix workflow automatically uses project configurations:
@@ -137,13 +154,11 @@ To create a new project configuration:
 3. Test with: `poetry run contextor list-projects`
 4. Use with: `poetry run contextor optimize --project-config myproject`
 
-## Migration from YAML Profiles
+## Standards Config Integration
 
-The new JSON project configurations replace the previous YAML profiles in `config/profiles/`. The JSON format provides:
+This system is fully aligned with standards and provides:
 
-- Better alignment with Context7 standards
-- More comprehensive metadata
-- Simplified CI/CD integration
-- Enhanced validation capabilities
-
-Legacy YAML configurations are still supported via the `--config` parameter, but project configurations via `--project-config` are recommended for new workflows.
+- **Automatic detection**: Contextor automatically detects and syncs with other standards-based config files (e.g. `context7.json`) in source repositories
+- **Standards compliance**: Full compatibility with standards configuration format
+- **Live synchronization**: Keeps local configurations updated with upstream changes
+- **Metadata preservation**: Maintains trust scores, approval status, and VIP flags

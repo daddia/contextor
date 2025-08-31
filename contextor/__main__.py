@@ -58,9 +58,9 @@ def list_projects():
     help="Optimization profile: lossless, balanced, or compact",
 )
 @click.option("--project-config", default="", help="Project configuration name (e.g., 'nextjs', 'react')")
-@click.option("--auto-detect-context7", is_flag=True, default=True, help="Automatically detect and use context7.json from target repo")
+@click.option("--auto-detect-config", is_flag=True, default=True, help="Automatically detect and use standards-based config files from target repo")
 @click.option("--metrics-output", default="", help="Output path for run metrics JSON")
-def optimize(src, out, repo, ref, topics, profile, project_config, auto_detect_context7, metrics_output):
+def optimize(src, out, repo, ref, topics, profile, project_config, auto_detect_config, metrics_output):
     """Convert a documentation directory to .mdc files.
 
     This command processes Markdown/MDX files from a source directory,
@@ -89,14 +89,14 @@ def optimize(src, out, repo, ref, topics, profile, project_config, auto_detect_c
         logger.info("Using project configuration", 
                    project=project_config, title=project_cfg.title)
 
-    # Check for context7.json in source directory if auto-detect is enabled
-    if auto_detect_context7:
-        detected_config = config_manager.detect_and_sync_context7(src_path, project_config or "detected")
+    # Check for standards-based config files in source directory if auto-detect is enabled
+    if auto_detect_config:
+        detected_config = config_manager.detect_and_sync_standards_config(src_path, project_config or "detected")
         if detected_config:
             # Use detected config if no explicit project config was provided
             if not project_cfg:
                 project_cfg = detected_config
-                logger.info("Using auto-detected context7 configuration", 
+                logger.info("Using auto-detected standards-based configuration", 
                            title=project_cfg.title, repo=project_cfg.repo_url)
 
     # Override parameters with project config if available

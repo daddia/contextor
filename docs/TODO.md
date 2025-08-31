@@ -15,22 +15,24 @@
 
 ## Current Sprint
 
-### Sprint 2 — **`sourcedocs` Integration & CI** → Release v0.1.1
+### Sprint 3 — **Advanced Content Intelligence** → Release v0.3.0
 
-- [x] **Matrix GitHub Action in `sourcedocs`** (P1 · S · Status: Done)  
-  Checkout upstream repos (e.g., Next.js, Tailwind) → run `contextor optimize` → commit `{source-slug}/` when changed.
+- [ ] **Advanced Topic** Automatic topic extraction 
+  - [ ] **Topic Extraction**: from content using keywords, headings, and metadata.
+  - [ ] **Topic tagging helpers**: Derive topics from path/headings; merge with provided `--topics`.
+  - [ ] **Semantic analysis**: Extract key concepts, relationships between pages
 
-- [x] **Run metrics artefact** (P3 · S · Status: Done)  
-  Emit simple JSON (`processed`, `written`, `skipped`, `errors`) per run for observability.
+- [ ] **Cross-linking**: Suggest “related pages” in front-matter.
+  - [ ] **Duplicate detection**: Flag near-duplicate pages across sources.
+  - [ ] **Content similarity**: Detect duplicate or highly similar content
 
-- [x] **Samples & profiles** (P3 · S · Status: Done)  
-  Provide sample `optimize.yaml` and recommended include/exclude rules for common projects.
+- [ ] **Quality scoring**: Rate content quality, completeness, freshness
 
 ---
 
-## Current Sprint
+## Backlog
 
-### Sprint 3 — **MCP Server (Read-only)** → Release v0.2.0
+### Sprint 4 — **MCP Server (Read-only)** → Release v0.2.0
 
 - [ ] **`contextor-server` (Python, SSE)** (P1 · M · Status: Not started)  
   Serve from `sourcedocs/{source-slug}`; read-only by default.
@@ -46,9 +48,7 @@
 
 ---
 
-## Backlog
-
-### Sprint 4 — **Quality & Performance** → Release v0.2.1
+### Sprint 5 — **Quality & Performance** → Release v0.2.1
 
 - [ ] **Performance budget** (P2 · S · Status: Not started)  
   Bench directory sizes vs runtime; aim ≤10–15 min on GH runners for reference sets.
@@ -59,20 +59,19 @@
 - [ ] **Pre-commit, lint, format** (P2 · S · Status: Not started)  
   `ruff` checks & `ruff format`; enforce in CI.
 
----
 
-### Sprint 5 — **Advanced Content Intelligence** → Release v0.3.0
+### Phase 1 Milestone — **Full End to End Test** → Release v1.0.0
 
-- [ ] **Advanced Topic** Automatic topic extraction 
-  - [ ] **Topic Extraction**: from content using keywords, headings, and metadata.
-  - [ ] **Topic tagging helpers**: Derive topics from path/headings; merge with provided `--topics`.
-  - [ ] **Semantic analysis**: Extract key concepts, relationships between pages
+- [ ] **CLI Triggered Fetch** 
+  - Uses config to target docs directory from another repo (e.g. Next.js, Tailwind CSS)
+  - Clean and normalise Markdown/MDX
+  - Performs token-saving compression
+  - Writes to separate repository `sourcedocs` (locally)
 
-- [ ] **Cross-linking**: Suggest “related pages” in front-matter.
-  - [ ] **Duplicate detection**: Flag near-duplicate pages across sources.
-  - [ ] **Content similarity**: Detect duplicate or highly similar content
-
-- [ ] **Quality scoring**: Rate content quality, completeness, freshness
+- [ ] **Advanced content itelligence**
+  - Topic Extraction**: from content using keywords, headings,
+  - Semantic analysis: Extract key concepts, relationships
+  - Content similarity detection
 
 ---
 
@@ -123,6 +122,15 @@
 
 ## Completed
 > Pre-pivot work retained for later phases (do not include in active backlog).
+
+### **`sourcedocs` Integration & CI** - *COMPLETE*
+
+- [x] **Matrix GitHub Action in `sourcedocs`** (P1 · S · Status: Done)  
+  Checkout upstream repos (e.g., Next.js, Tailwind) → run `contextor optimize` → commit `{source-slug}/` when changed.
+- [x] **Run metrics artefact** (P3 · S · Status: Done)  
+  Emit simple JSON (`processed`, `written`, `skipped`, `errors`) per run for observability.
+- [x] **Samples & profiles** (P3 · S · Status: Done)  
+  Provide sample `optimize.yaml` and recommended include/exclude rules for common projects.
 
 
 ### **Core Pipeline: Directory → MDC** - *COMPLETE*

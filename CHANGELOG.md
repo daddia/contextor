@@ -23,13 +23,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/), and this 
   - Pre-configured profiles for Next.js, React, Tailwind CSS, VS Code, and Vite
   - Comprehensive `optimize.sample.yaml` with multi-source configuration
   - Profile documentation and usage guidelines
-- **Advanced project configurations** aligned with Context7 structure
+- **Advanced project configurations** aligned with standards-based structure
   - JSON-based project configurations in `config/projects/` directory
-  - Context7-compatible metadata including trust scores, approval status, and VIP flags
+  - Standards-compatible metadata including trust scores, approval status, and VIP flags
   - New `--project-config` CLI option for simplified usage
   - `contextor list-projects` command to view available configurations
   - Automatic parameter inference from project configurations (repo, branch, topics, profile)
   - Enhanced GitHub Actions integration with dynamic configuration loading
+- **Config auto-detection and synchronization**
+  - Automatic detection of other standards-based config files (e.g. `context7.json`) in source repositories
+  - Live synchronization with upstream configurations
+  - Support for `--auto-detect-config` flag (enabled by default)
+  - Intelligent search in multiple locations (repo root, docs dirs)
+  - Maintains local copies with sync metadata for tracking changes
 
 ### Changed
 
@@ -37,6 +43,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/), and this 
 - Updated CLI help text to include new metrics option
 - Simplified GitHub Actions matrix configuration (project details now in JSON configs)
 - Updated DocumentLoader to support project configuration integration
+
+### Removed
+
+- **YAML configuration support** - Removed backward compatibility with YAML configs
+- **Legacy profile files** - Removed `config/profiles/` directory and YAML profile system
+- **PyYAML dependency** - No longer required as YAML support is removed
 
 ## [0.0.1] - 2025-08-31
 

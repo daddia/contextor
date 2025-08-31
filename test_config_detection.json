@@ -1,0 +1,31 @@
+{
+  "settings": {
+    "title": "Test Standards Config",
+    "private": false,
+    "project": "/test/standards-example",
+    "docsRepoUrl": "https://github.com/test/standards-example",
+    "folders": [
+      "docs"
+    ],
+    "excludeFolders": [
+      "archive"
+    ],
+    "branch": "main",
+    "description": "A test project to verify standards-based config integration",
+    "approved": true,
+    "stars": 500,
+    "trustScore": 8,
+    "vip": false,
+    "excludeFiles": [
+      "CHANGELOG.md"
+    ],
+    "type": "repo",
+    "topics": [
+      "test",
+      "standards",
+      "config"
+    ],
+    "profile": "balanced"
+  },
+  "tags": {}
+}

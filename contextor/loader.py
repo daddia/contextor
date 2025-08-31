@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import fnmatch
+import glob
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
@@ -76,15 +77,30 @@ class DocumentLoader:
 
         # Check exclude patterns first
         for pattern in self.exclude_patterns:
-            if fnmatch.fnmatch(path_str, pattern):
+            if self._matches_pattern(path_str, pattern):
                 return False
 
         # Check include patterns
         for pattern in self.include_patterns:
-            if relative_path.match(pattern):
+            if self._matches_pattern(path_str, pattern):
                 return True
 
         return False
+
+    def _matches_pattern(self, path_str: str, pattern: str) -> bool:
+        """Check if a path matches a glob pattern, supporting ** wildcards."""
+        # Use pathlib for patterns with **
+        if "**" in pattern:
+            try:
+                # Convert to Path and use match
+                path_obj = Path(path_str)
+                return path_obj.match(pattern)
+            except Exception:
+                # Fallback to fnmatch if Path.match fails
+                return fnmatch.fnmatch(path_str, pattern)
+        else:
+            # Use fnmatch for simple patterns
+            return fnmatch.fnmatch(path_str, pattern)
 
     def _extract_title(self, content: str, file_path: str) -> str | None:
         """Extract title from content (frontmatter or first heading)."""
