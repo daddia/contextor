@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import structlog
 
@@ -155,7 +155,7 @@ class ProjectConfig:
 class ProjectConfigManager:
     """Manages project configurations."""
 
-    def __init__(self, config_dir: Optional[Path] = None):
+    def __init__(self, config_dir: Path | None = None):
         """Initialize configuration manager.
 
         Args:
@@ -166,7 +166,7 @@ class ProjectConfigManager:
         )
         self._configs_cache: dict[str, ProjectConfig] = {}
 
-    def load_project_config(self, project_name: str) -> Optional[ProjectConfig]:
+    def load_project_config(self, project_name: str) -> ProjectConfig | None:
         """Load a project configuration by name.
 
         Args:
@@ -224,7 +224,7 @@ class ProjectConfigManager:
 
         return sorted(projects)
 
-    def get_project_by_repo(self, repo_path: str) -> Optional[ProjectConfig]:
+    def get_project_by_repo(self, repo_path: str) -> ProjectConfig | None:
         """Find project configuration by repository path.
 
         Args:
@@ -285,7 +285,7 @@ class ProjectConfigManager:
 
     def sync_with_standards_config(
         self, config_path: Path, project_name: str
-    ) -> Optional[ProjectConfig]:
+    ) -> ProjectConfig | None:
         """Synchronize with upstream standards-based config file.
 
         Args:
@@ -400,7 +400,7 @@ class ProjectConfigManager:
 
     def detect_and_sync_standards_config(
         self, source_dir: Path, project_name: str = "detected"
-    ) -> Optional[ProjectConfig]:
+    ) -> ProjectConfig | None:
         """Detect and sync with standards-based config files in a source directory.
 
         Args:

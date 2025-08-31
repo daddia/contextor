@@ -2,7 +2,7 @@
 
 import re
 from datetime import UTC, datetime
-from typing import Any, Optional
+from typing import Any
 
 import structlog
 
@@ -12,7 +12,7 @@ logger = structlog.get_logger()
 class QualityScorer:
     """Scores document quality based on completeness, freshness, and clarity."""
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """Initialize the quality scorer.
 
         Args:

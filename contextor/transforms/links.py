@@ -1,6 +1,7 @@
 """Link processing and hygiene transforms."""
 
 import re
+from typing import Any
 from urllib.parse import urlparse
 
 
@@ -65,7 +66,7 @@ def _fix_relative_links(content: str, source_path: str) -> str:
     if not source_path:
         return content
 
-    def fix_link(match):
+    def fix_link(match: Any) -> str:
         link_text = match.group(1)
         link_url = match.group(2)
 

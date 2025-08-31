@@ -3,7 +3,7 @@
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import frontmatter
 import structlog
@@ -23,7 +23,7 @@ class IntelligenceAnalyzer:
     def __init__(
         self,
         source_dir: Path,
-        config: Optional[dict[str, Any]] = None,
+        config: dict[str, Any] | None = None,
     ):
         """Initialize the intelligence analyzer.
 
@@ -47,7 +47,7 @@ class IntelligenceAnalyzer:
 
     def analyze(
         self,
-        features: Optional[set[str]] = None,
+        features: set[str] | None = None,
         incremental: bool = True,
     ) -> dict[str, Any]:
         """Run intelligence analysis on the document collection.
@@ -190,7 +190,7 @@ class IntelligenceAnalyzer:
 
     def _analyze_document(
         self, mdc_path: Path, features: set[str]
-    ) -> Optional[dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Analyze a single document and extract intelligence data."""
         try:
             with open(mdc_path, encoding="utf-8") as f:

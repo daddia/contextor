@@ -2,7 +2,7 @@
 
 import re
 from collections import Counter
-from typing import Any, Optional
+from typing import Any
 
 import structlog
 
@@ -12,7 +12,7 @@ logger = structlog.get_logger()
 class TopicExtractor:
     """Extracts topics from document content using keywords and headings."""
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """Initialize the topic extractor.
 
         Args:
@@ -91,7 +91,6 @@ class TopicExtractor:
             "my",
             "your",
             "his",
-            "her",
             "its",
             "our",
             "their",

@@ -1,6 +1,7 @@
 """Markdown normalization transforms."""
 
 import re
+from typing import Any
 
 import mdformat
 
@@ -45,7 +46,7 @@ def normalize_markdown(content: str) -> str:
 def _normalize_headings(content: str) -> str:
     """Normalize heading syntax to use # style consistently."""
     lines = content.split("\n")
-    normalized_lines = []
+    normalized_lines: list[str] = []
 
     for i, line in enumerate(lines):
         # Convert underline-style headings to # style
@@ -78,7 +79,7 @@ def _normalize_code_fences(content: str) -> str:
     content = re.sub(r"^~~~\s*$", r"```", content, flags=re.MULTILINE)
 
     # Ensure language specifiers are lowercase
-    def normalize_lang(match):
+    def normalize_lang(match: Any) -> str:
         fence, lang, rest = match.groups()
         if lang:
             lang = lang.lower()

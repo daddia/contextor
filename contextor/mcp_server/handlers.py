@@ -5,7 +5,7 @@ Request handlers for Contextor MCP Server - Updated for sourcedocs serving
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +33,8 @@ class SourceDocsHandlers:
 
     async def list_source(
         self,
-        source_slug: Optional[str] = None,
-        since: Optional[str] = None,
+        source_slug: str | None = None,
+        since: str | None = None,
         include_stats: bool = False,
     ) -> dict[str, Any]:
         """
@@ -101,7 +101,7 @@ class SourceDocsHandlers:
             return {"status": "error", "error": str(e)}
 
     async def get_file(
-        self, path: Optional[str] = None, slug: Optional[str] = None
+        self, path: str | None = None, slug: str | None = None
     ) -> dict[str, Any]:
         """
         Retrieve a specific file by path or slug
@@ -119,9 +119,14 @@ class SourceDocsHandlers:
         try:
             if path:
                 file_path = self.sourcedocs_path / path
-            else:
+            elif slug:
                 # Convert slug to path (basic implementation)
                 file_path = self._slug_to_path(slug)
+            else:
+                return {
+                    "status": "error",
+                    "error": "Either path or slug must be provided",
+                }
 
             if not file_path.exists():
                 return {
@@ -162,7 +167,7 @@ class SourceDocsHandlers:
     async def search(
         self,
         query: str,
-        source_filter: Optional[str] = None,
+        source_filter: str | None = None,
         limit: int = 10,
         include_content: bool = True,
     ) -> list[dict[str, Any]]:
@@ -228,7 +233,10 @@ class SourceDocsHandlers:
                     continue
 
             # Sort by relevance score and limit
-            results.sort(key=lambda x: x["score"], reverse=True)
+            def get_score(x: dict[str, Any]) -> float:
+                score = x.get("score", 0)
+                return float(score) if score is not None else 0.0
+            results.sort(key=get_score, reverse=True)
             return results[:limit]
 
         except Exception as e:
@@ -252,8 +260,8 @@ class SourceDocsHandlers:
             total_size = 0
             total_lines = 0
             total_words = 0
-            sources = {}
-            file_types = {}
+            sources: dict[str, dict[str, Any]] = {}
+            file_types: dict[str, int] = {}
 
             for file_path in self.sourcedocs_path.rglob("*"):
                 if file_path.is_file() and not file_path.name.startswith("."):
@@ -316,11 +324,11 @@ class SourceDocsHandlers:
                 result["sources"] = sources
             else:
                 result["source_count"] = len(
-                    set(
+                    {
                         file_path.parts[len(self.sourcedocs_path.parts)]
                         for file_path in self.sourcedocs_path.rglob("*")
                         if file_path.is_file() and not file_path.name.startswith(".")
-                    )
+                    }
                 )
 
             return result
@@ -335,7 +343,7 @@ class SourceDocsHandlers:
         self,
         source_path: Path,
         source_slug: str,
-        since_timestamp: Optional[float],
+        since_timestamp: float | None,
         include_stats: bool,
     ) -> dict[str, Any]:
         """Get detailed listing for a specific source"""
@@ -349,7 +357,7 @@ class SourceDocsHandlers:
                 if since_timestamp and stat.st_mtime < since_timestamp:
                     continue
 
-                file_info = {
+                file_info: dict[str, Any] = {
                     "path": str(file_path.relative_to(self.sourcedocs_path)),
                     "name": file_path.name,
                     "modified": datetime.fromtimestamp(stat.st_mtime).isoformat(),
@@ -380,12 +388,12 @@ class SourceDocsHandlers:
         }
 
     async def _get_source_stats(
-        self, source_path: Path, since_timestamp: Optional[float]
+        self, source_path: Path, since_timestamp: float | None
     ) -> dict[str, Any]:
         """Get statistics for a single source"""
         file_count = 0
         total_size = 0
-        latest_modified = None
+        latest_modified: float | None = None
 
         for file_path in source_path.rglob("*"):
             if file_path.is_file() and not file_path.name.startswith("."):
@@ -401,7 +409,7 @@ class SourceDocsHandlers:
                 if latest_modified is None or stat.st_mtime > latest_modified:
                     latest_modified = stat.st_mtime
 
-        stats = {"file_count": file_count, "total_size": total_size}
+        stats: dict[str, Any] = {"file_count": file_count, "total_size": total_size}
 
         if latest_modified:
             stats["last_modified"] = datetime.fromtimestamp(latest_modified).isoformat()

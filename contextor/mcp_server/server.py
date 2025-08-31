@@ -7,7 +7,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
 from sse_starlette.sse import EventSourceResponse
@@ -74,7 +74,7 @@ class ContextorMCPServer:
                 return result
             except Exception as e:
                 logger.error(f"Error in list_source: {e}", exc_info=True)
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from e
 
         @self.app.post("/tools/get_file")
         async def get_file_tool(request: dict[str, Any]):
@@ -88,7 +88,7 @@ class ContextorMCPServer:
                 raise
             except Exception as e:
                 logger.error(f"Error in get_file: {e}", exc_info=True)
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from e
 
         @self.app.post("/tools/search")
         async def search_tool(request: dict[str, Any]):
@@ -98,7 +98,7 @@ class ContextorMCPServer:
                 return {"results": result}
             except Exception as e:
                 logger.error(f"Error in search: {e}", exc_info=True)
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from e
 
         @self.app.post("/tools/stats")
         async def stats_tool(request: dict[str, Any]):
@@ -108,13 +108,13 @@ class ContextorMCPServer:
                 return result
             except Exception as e:
                 logger.error(f"Error in stats: {e}", exc_info=True)
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from e
 
         # REST-style endpoints for easier HTTP access
         @self.app.get("/sources")
         async def list_sources(
-            source_slug: Optional[str] = None,
-            since: Optional[str] = None,
+            source_slug: str | None = None,
+            since: str | None = None,
             include_stats: bool = False,
         ):
             """REST endpoint to list sources"""
@@ -134,9 +134,7 @@ class ContextorMCPServer:
             return result
 
         @self.app.get("/files")
-        async def get_file_by_path(
-            path: Optional[str] = None, slug: Optional[str] = None
-        ):
+        async def get_file_by_path(path: str | None = None, slug: str | None = None):
             """REST endpoint to get file by path or slug"""
             if not path and not slug:
                 raise HTTPException(
@@ -151,7 +149,7 @@ class ContextorMCPServer:
         @self.app.get("/search")
         async def search_content(
             query: str,
-            source_filter: Optional[str] = None,
+            source_filter: str | None = None,
             limit: int = 10,
             include_content: bool = True,
         ):

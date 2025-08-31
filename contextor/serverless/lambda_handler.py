@@ -8,22 +8,22 @@ import os
 from pathlib import Path
 from typing import Any
 
+# Import MCP server components
+from ..mcp_server import SourceDocsHandlers
+
 # Configure logging
 logger = logging.getLogger()
 logger.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
-
-# Import MCP server components
-from ..mcp_server import ContextorHandlers
 
 # Initialize server once for Lambda container reuse
 BASE_PATH = Path("/tmp/contextor")
 BASE_PATH.mkdir(exist_ok=True)
 
 # Initialize handlers
-handlers = ContextorHandlers(BASE_PATH)
+handlers = SourceDocsHandlers(BASE_PATH)
 
 
-def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
+async def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     """
     AWS Lambda handler for MCP requests
 
@@ -39,7 +39,7 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     # Parse request
     http_method = event.get("httpMethod", "GET")
     path = event.get("path", "/")
-    headers = event.get("headers", {})
+    _ = event.get("headers", {})  # Headers available if needed in future
 
     # Parse body if present
     body = {}

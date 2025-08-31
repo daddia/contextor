@@ -4,7 +4,6 @@ import json
 import tempfile
 import time
 from pathlib import Path
-from typing import Optional
 
 from .logging_config import get_logger, log_operation, log_operation_complete
 
@@ -265,7 +264,7 @@ class PerformanceBenchmark:
                 raise
 
     def run_full_benchmark(
-        self, base_path: Optional[Path] = None, cleanup: bool = True
+        self, base_path: Path | None = None, cleanup: bool = True
     ) -> list[dict]:
         """Run a full performance benchmark with multiple dataset sizes.
 

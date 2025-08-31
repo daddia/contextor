@@ -10,7 +10,7 @@ from structlog.processors import TimeStamper
 
 
 def configure_logging(
-    level: str = "INFO", json_output: bool = None, include_context: bool = True
+    level: str = "INFO", json_output: bool | None = None, include_context: bool = True
 ) -> None:
     """Configure structured logging for Contextor.
 
@@ -69,7 +69,7 @@ def configure_logging(
     )
 
 
-def get_logger(name: str = None) -> structlog.stdlib.BoundLogger:
+def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
     """Get a configured logger instance.
 
     Args:

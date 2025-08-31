@@ -280,7 +280,7 @@ class TestStats:
         assert len(result["sources"]) >= 2
 
         # Check source details
-        for source_name, source_stats in result["sources"].items():
+        for source_stats in result["sources"].values():
             assert "files" in source_stats
             assert "size" in source_stats
             assert "types" in source_stats

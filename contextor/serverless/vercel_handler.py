@@ -9,20 +9,20 @@ from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 from typing import Any
 
+# Import MCP server components
+from ..mcp_server import SourceDocsHandlers
+from ..mcp_server.tools import CONTEXTOR_TOOLS
+
 # Configure logging
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"))
 logger = logging.getLogger(__name__)
-
-# Import MCP server components
-from ..mcp_server import ContextorHandlers
-from ..mcp_server.tools import CONTEXTOR_TOOLS
 
 # Initialize storage path
 BASE_PATH = Path("/tmp/contextor")
 BASE_PATH.mkdir(exist_ok=True)
 
 # Initialize handlers
-handlers = ContextorHandlers(BASE_PATH)
+handlers = SourceDocsHandlers(BASE_PATH)
 
 
 class handler(BaseHTTPRequestHandler):

@@ -1,6 +1,7 @@
 """Content size optimization transforms."""
 
 import re
+from typing import Any
 
 
 def compress_content(content: str, aggressive: bool = False) -> str:
@@ -31,7 +32,7 @@ def compress_content(content: str, aggressive: bool = False) -> str:
 def _compress_code_blocks(content: str, aggressive: bool) -> str:
     """Compress large code blocks while preserving key information."""
 
-    def compress_block(match):
+    def compress_block(match: Any) -> str:
         fence_start = match.group(1)  # ```language
         code_content = match.group(2)
         fence_end = match.group(3)  # ```
@@ -68,7 +69,7 @@ def _compress_code_blocks(content: str, aggressive: bool) -> str:
 def _compress_json_blocks(content: str, aggressive: bool) -> str:
     """Compress large JSON blocks in code fences."""
 
-    def compress_json(match):
+    def compress_json(match: Any) -> str:
         fence_start = match.group(1)
         json_content = match.group(2)
         fence_end = match.group(3)
