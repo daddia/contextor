@@ -1,1 +1,7 @@
+# Developer Tools
+.backup
 _helix
+_temple
+
+# External
+vendor
