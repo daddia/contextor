@@ -10,6 +10,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/), and this 
 
 ### Added
 
-- Initial repository for Promptman
+- Initial repo and scaffold for Contextor
 
 ---

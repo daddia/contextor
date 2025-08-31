@@ -15,24 +15,6 @@
 
 ## Current Sprint
 
-### Sprint 0 — **Pivot & Bootstrap** → Release v0.0.1
-
-- [ ] **Poetry & Makefile baseline** (P1 · S · Status: Not started)  
-  Initialise Poetry project, lock dependencies, and add Make targets (`install`, `lint`, `fmt`, `optimize`, `test`).
-
-- [ ] **CLI scaffold (`optimize`) with Typer** (P1 · S · Status: Not started)  
-  `contextor optimize --src <docs_dir> --out <sourcedocs> --repo <owner/name> --ref <sha|branch> --topics …`.
-
-- [ ] **Config file (optional) & defaults** (P2 · S · Status: Not started)  
-  Support `config/optimize.yaml` for include/exclude globs, per-source topics, and output scope.
-
-- [ ] **Repo metadata capture** (P2 · S · Status: Not started)  
-  Resolve canonical GitHub URL for each file (repo, ref, path) for front-matter provenance.
-
----
-
-## Next Sprint
-
 ### Sprint 1 — **Core Pipeline: Directory → MDC** → Release v0.1.0
 
 - [ ] **Discovery / File selection** (P1 · S · Status: Not started)  
@@ -170,6 +152,17 @@
 
 ## Completed
 > Pre-pivot work retained for later phases (do not include in active backlog).
+
+### Pivot & Bootstrap
+
+- [x] **Poetry & Makefile baseline** (P1 · S · Status: Not started)  
+  Initialise Poetry project, lock dependencies, and add Make targets (`install`, `lint`, `fmt`, `optimize`, `test`).
+- [x] **CLI scaffold (`optimize`) with Typer** (P1 · S · Status: Not started)  
+  `contextor optimize --src <docs_dir> --out <sourcedocs> --repo <owner/name> --ref <sha|branch> --topics …`.
+- [x] **Config file (optional) & defaults** (P2 · S · Status: Not started)  
+  Support `config/optimize.yaml` for include/exclude globs, per-source topics, and output scope.
+- [x] **Repo metadata capture** (P2 · S · Status: Not started)  
+  Resolve canonical GitHub URL for each file (repo, ref, path) for front-matter provenance.
 
 ### Legacy assets available — **Reusable in Phase 2 & 3** — **ARCHIVED**
 

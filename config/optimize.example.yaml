@@ -3,6 +3,8 @@
 
 # File inclusion patterns (glob patterns)
 include:
+  - "*.md"
+  - "*.mdx"
   - "**/*.md"
   - "**/*.mdx"
 

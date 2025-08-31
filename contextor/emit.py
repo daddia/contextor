@@ -7,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import frontmatter
 import structlog
 
 from .utils import content_hash, ensure_directory, path_to_slug
@@ -84,12 +85,13 @@ class MDCEmitter:
             return False
 
         try:
-            # Read existing file and check hash in frontmatter
+            # Read existing file and parse frontmatter
             with open(mdc_path, encoding='utf-8') as f:
-                content = f.read()
+                post = frontmatter.load(f)
 
-            # Extract hash from frontmatter (simple approach)
-            if f'content_hash: {current_hash}' in content:
+            # Check if hash matches
+            existing_hash = post.metadata.get('content_hash')
+            if existing_hash == current_hash:
                 return True
 
         except Exception as e:
