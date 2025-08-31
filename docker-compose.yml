@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  contextor-mcp:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      # Mount the sourcedocs directory from the parent project
+      - ../sourcedocs:/app/sourcedocs:ro
+    environment:
+      - SOURCEDOCS_PATH=/app/sourcedocs
+      - LOG_LEVEL=INFO
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

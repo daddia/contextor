@@ -1,479 +1,334 @@
 """
-Request handlers for Contextor MCP Server tools
+Request handlers for Contextor MCP Server - Updated for sourcedocs serving
 """
 
-import asyncio
-import hashlib
 import json
 import logging
-import yaml
+import os
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-from urllib.parse import urlparse, quote
 
 logger = logging.getLogger(__name__)
 
 
-class ContextorHandlers:
+class SourceDocsHandlers:
     """
-    Handles MCP tool invocations for Contextor
+    Handles MCP tool invocations for serving sourcedocs content
     """
     
-    def __init__(self, base_path: Path):
+    def __init__(self, sourcedocs_path: Path):
         """
-        Initialize handlers with base storage path
+        Initialize handlers with sourcedocs directory path
         
         Args:
-            base_path: Base directory for storage
+            sourcedocs_path: Path to the sourcedocs directory
         """
-        self.base_path = base_path
-        self.raw_dir = base_path / "_raw"
-        self.context_dir = base_path / "{source-slug}"
+        self.sourcedocs_path = sourcedocs_path.resolve()
         
-        # Ensure directories exist
-        self.raw_dir.mkdir(exist_ok=True)
-        self.context_dir.mkdir(exist_ok=True)
+        if not self.sourcedocs_path.exists():
+            raise ValueError(f"Sourcedocs path does not exist: {self.sourcedocs_path}")
         
-        logger.info(f"Handlers initialized with base path: {base_path}")
+        logger.info(f"Handlers initialized with sourcedocs path: {self.sourcedocs_path}")
     
-    async def fetch_page(
+    async def list_source(
         self,
-        url: str,
-        selectors: Optional[Dict] = None,
-        cache: bool = True
+        source_slug: Optional[str] = None,
+        since: Optional[str] = None,
+        include_stats: bool = False
     ) -> Dict[str, Any]:
         """
-        Fetch a web page and convert to markdown
+        List available source slugs and their content structure
         
         Args:
-            url: URL to fetch
-            selectors: Optional CSS selectors for extraction
-            cache: Whether to use cached content
+            source_slug: Optional source slug for detailed listing
+            since: Optional ISO timestamp to filter by modification time
+            include_stats: Whether to include file statistics
         
         Returns:
-            Dictionary with fetch results
+            Dictionary with source listings
         """
-        logger.info(f"Fetching page: {url}")
-        
-        # Extract site and page slugs
-        site_slug = self._extract_site_slug(url)
-        page_slug = self._extract_page_slug(url)
-        
-        # Check cache if enabled
-        if cache:
-            cached = await self._check_cache(site_slug, page_slug)
-            if cached:
-                logger.info(f"Using cached content for {url}")
-                return {
-                    "status": "cached",
-                    "site": site_slug,
-                    "page": page_slug,
-                    "raw_path": str(cached["raw_path"]),
-                    "mcp_path": str(cached["mcp_path"]),
-                    "cached_at": cached["cached_at"]
-                }
-        
-        # Import scraper modules (these would need to be implemented)
-        from ..core.scraper import fetch_url
-        from ..core.markdown_converter import html_to_markdown
-        from ..core.mcp_optimizer import optimize_for{source-slug}
+        logger.info(f"Listing sources: {source_slug}, since: {since}")
         
         try:
-            # Fetch HTML content
-            html_content = await fetch_url(url)
+            since_timestamp = None
+            if since:
+                try:
+                    since_timestamp = datetime.fromisoformat(since.replace('Z', '+00:00')).timestamp()
+                except ValueError:
+                    logger.warning(f"Invalid timestamp format: {since}")
             
-            # Convert to markdown
-            markdown = html_to_markdown(html_content, selectors)
+            if source_slug:
+                # List specific source
+                source_path = self.sourcedocs_path / source_slug
+                if not source_path.exists():
+                    return {
+                        "status": "not_found",
+                        "error": f"Source not found: {source_slug}"
+                    }
+                
+                return await self._list_source_detailed(source_path, source_slug, since_timestamp, include_stats)
             
-            # Store raw markdown
-            date_dir = datetime.now().strftime("%Y-%m-%d")
-            raw_path = self.raw_dir / site_slug / date_dir / f"{page_slug}.md"
-            raw_path.parent.mkdir(parents=True, exist_ok=True)
-            raw_path.write_text(markdown)
-            
-            # Update latest symlink
-            latest_link = self.raw_dir / site_slug / "latest"
-            if latest_link.exists():
-                latest_link.unlink()
-            latest_link.symlink_to(date_dir)
-            
-            # Store metadata
-            metadata = {
-                "url": url,
-                "fetched_at": datetime.now().isoformat(),
-                "content_hash": hashlib.sha256(markdown.encode()).hexdigest(),
-                "word_count": len(markdown.split()),
-                "char_count": len(markdown),
-                "selectors": selectors
+            else:
+                # List all sources
+                sources = []
+                
+                for item in self.sourcedocs_path.iterdir():
+                    if item.is_dir() and not item.name.startswith('.'):
+                        source_info = {
+                            "slug": item.name,
+                            "path": str(item.relative_to(self.sourcedocs_path))
+                        }
+                        
+                        if include_stats:
+                            stats = await self._get_source_stats(item, since_timestamp)
+                            source_info.update(stats)
+                        
+                        sources.append(source_info)
+                
+                return {
+                    "status": "success",
+                    "sources": sources,
+                    "total_sources": len(sources)
+                }
+        
+        except Exception as e:
+            logger.error(f"Error listing sources: {e}", exc_info=True)
+            return {
+                "status": "error",
+                "error": str(e)
             }
+    
+    async def get_file(
+        self,
+        path: Optional[str] = None,
+        slug: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Retrieve a specific file by path or slug
+        
+        Args:
+            path: File path relative to sourcedocs/
+            slug: Alternative file slug identifier
+        
+        Returns:
+            File content and metadata
+        """
+        if not path and not slug:
+            return {
+                "status": "error",
+                "error": "Either path or slug must be provided"
+            }
+        
+        try:
+            if path:
+                file_path = self.sourcedocs_path / path
+            else:
+                # Convert slug to path (basic implementation)
+                file_path = self._slug_to_path(slug)
             
-            metadata_path = raw_path.parent / "metadata.json"
-            metadata_path.write_text(json.dumps(metadata, indent=2))
+            if not file_path.exists():
+                return {
+                    "status": "not_found",
+                    "error": f"File not found: {path or slug}"
+                }
             
-            # Generate optimized MCP
-            mcp_content = optimize_for{source-slug}(markdown, url)
-            mcp_path = self.context_dir / site_slug / "pages" / f"{page_slug}.mdc"
-            mcp_path.parent.mkdir(parents=True, exist_ok=True)
+            if not file_path.is_file():
+                return {
+                    "status": "error",
+                    "error": f"Path is not a file: {path or slug}"
+                }
             
-            with open(mcp_path, 'w') as f:
-                yaml.dump(mcp_content, f, default_flow_style=False)
+            # Read file content
+            content = file_path.read_text(encoding='utf-8')
             
-            # Update site index
-            await self._update_site_index(site_slug, page_slug, metadata)
-            
-            logger.info(f"Successfully fetched and stored: {url}")
+            # Get file stats
+            stat = file_path.stat()
             
             return {
                 "status": "success",
-                "site": site_slug,
-                "page": page_slug,
-                "raw_path": str(raw_path.relative_to(self.base_path)),
-                "mcp_path": str(mcp_path.relative_to(self.base_path)),
-                "metadata": metadata
+                "path": str(file_path.relative_to(self.sourcedocs_path)),
+                "content": content,
+                "metadata": {
+                    "size": stat.st_size,
+                    "modified": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                    "created": datetime.fromtimestamp(stat.st_ctime).isoformat(),
+                    "encoding": "utf-8",
+                    "line_count": len(content.splitlines()),
+                    "word_count": len(content.split())
+                }
             }
-            
+        
         except Exception as e:
-            logger.error(f"Error fetching {url}: {e}", exc_info=True)
+            logger.error(f"Error getting file: {e}", exc_info=True)
             return {
                 "status": "error",
-                "error": str(e),
-                "url": url
+                "error": str(e)
             }
     
-    async def search{source-slug}(
+    async def search(
         self,
         query: str,
-        site_filter: Optional[str] = None,
-        limit: int = 10
+        source_filter: Optional[str] = None,
+        limit: int = 10,
+        include_content: bool = True
     ) -> List[Dict[str, Any]]:
         """
-        Search through existing context files
+        Search through sourcedocs content
         
         Args:
-            query: Search query
-            site_filter: Optional site to filter by
-            limit: Maximum results
+            query: Search query string
+            source_filter: Optional source slug to filter by
+            limit: Maximum number of results
+            include_content: Whether to include content snippets
         
         Returns:
             List of search results
         """
-        logger.info(f"Searching for: {query}")
-        
-        results = []
-        search_dir = self.context_dir / site_filter if site_filter else self.context_dir
-        
-        if not search_dir.exists():
-            return []
-        
-        # Search through MCP files
-        for mcp_file in search_dir.rglob("*.mdc"):
-            try:
-                with open(mcp_file) as f:
-                    content = yaml.safe_load(f)
-                
-                # Convert content to searchable text
-                text = self._extract_searchable_text(content)
-                
-                # Simple relevance scoring
-                if query.lower() in text.lower():
-                    score = text.lower().count(query.lower())
-                    
-                    # Extract preview
-                    preview = self._extract_preview(text, query)
-                    
-                    results.append({
-                        "file": str(mcp_file.relative_to(self.context_dir)),
-                        "site": mcp_file.parts[-3] if len(mcp_file.parts) > 2 else "unknown",
-                        "page": mcp_file.stem,
-                        "score": score,
-                        "preview": preview,
-                        "url": content.get("source", {}).get("url", "")
-                    })
-            
-            except Exception as e:
-                logger.warning(f"Error searching {mcp_file}: {e}")
-                continue
-        
-        # Sort by relevance and limit
-        results.sort(key=lambda x: x["score"], reverse=True)
-        
-        return results[:limit]
-    
-    async def get_mcp_file(self, site: str, page: str) -> Dict[str, Any]:
-        """
-        Retrieve a specific MCP file
-        
-        Args:
-            site: Site slug
-            page: Page slug
-        
-        Returns:
-            MCP file content
-        """
-        mcp_path = self.context_dir / site / "pages" / f"{page}.mdc"
-        
-        if not mcp_path.exists():
-            return {
-                "status": "not_found",
-                "error": f"MCP file not found: {site}/{page}"
-            }
+        logger.info(f"Searching for: '{query}' in source: {source_filter}")
         
         try:
-            with open(mcp_path) as f:
-                content = yaml.safe_load(f)
+            results = []
+            search_path = self.sourcedocs_path / source_filter if source_filter else self.sourcedocs_path
             
-            return {
-                "status": "success",
-                "site": site,
-                "page": page,
-                "content": content,
-                "path": str(mcp_path.relative_to(self.base_path))
-            }
-        
-        except Exception as e:
-            logger.error(f"Error reading MCP file: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
-    
-    async def get_raw_markdown(
-        self,
-        site: str,
-        page: str,
-        date: Optional[str] = None
-    ) -> Dict[str, Any]:
-        """
-        Retrieve raw markdown content
-        
-        Args:
-            site: Site slug
-            page: Page slug
-            date: Optional date for versioned content
-        
-        Returns:
-            Raw markdown content
-        """
-        if date:
-            raw_path = self.raw_dir / site / date / f"{page}.md"
-        else:
-            # Use latest
-            raw_path = self.raw_dir / site / "latest" / f"{page}.md"
-        
-        if not raw_path.exists():
-            return {
-                "status": "not_found",
-                "error": f"Raw markdown not found: {site}/{page}"
-            }
-        
-        try:
-            content = raw_path.read_text()
+            if not search_path.exists():
+                return []
             
-            # Get metadata if available
-            metadata_path = raw_path.parent / "metadata.json"
-            metadata = {}
-            if metadata_path.exists():
-                with open(metadata_path) as f:
-                    metadata = json.load(f)
-            
-            return {
-                "status": "success",
-                "site": site,
-                "page": page,
-                "content": content,
-                "metadata": metadata,
-                "path": str(raw_path.relative_to(self.base_path))
-            }
-        
-        except Exception as e:
-            logger.error(f"Error reading raw markdown: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
-    
-    async def list_sites(
-        self,
-        include_pages: bool = False,
-        include_stats: bool = False
-    ) -> List[Dict[str, Any]]:
-        """
-        List available sites and optionally their pages
-        
-        Args:
-            include_pages: Whether to include page listings
-            include_stats: Whether to include statistics
-        
-        Returns:
-            List of sites with optional details
-        """
-        sites = []
-        
-        for site_dir in self.context_dir.iterdir():
-            if not site_dir.is_dir():
-                continue
-            
-            site_info = {
-                "slug": site_dir.name,
-                "path": str(site_dir.relative_to(self.base_path))
-            }
-            
-            if include_pages or include_stats:
-                pages_dir = site_dir / "pages"
-                if pages_dir.exists():
-                    pages = list(pages_dir.glob("*.mdc"))
+            # Search through markdown files
+            for file_path in search_path.rglob("*.md"):
+                try:
+                    content = file_path.read_text(encoding='utf-8')
                     
-                    if include_pages:
-                        site_info["pages"] = [p.stem for p in pages]
-                    
-                    if include_stats:
-                        site_info["page_count"] = len(pages)
+                    # Simple case-insensitive search
+                    if query.lower() in content.lower():
+                        # Calculate relevance score (simple count)
+                        score = content.lower().count(query.lower())
                         
-                        # Get last modified time
-                        if pages:
-                            last_modified = max(p.stat().st_mtime for p in pages)
-                            site_info["last_updated"] = datetime.fromtimestamp(last_modified).isoformat()
-            
-            # Check for site manifest
-            manifest_path = site_dir / "manifest.json"
-            if manifest_path.exists():
-                with open(manifest_path) as f:
-                    manifest = json.load(f)
-                    site_info["name"] = manifest.get("name", site_dir.name)
-                    site_info["base_url"] = manifest.get("base_url", "")
-            
-            sites.append(site_info)
-        
-        return sites
-    
-    async def refresh_content(
-        self,
-        site: str,
-        pages: Optional[List[str]] = None,
-        force: bool = False
-    ) -> Dict[str, Any]:
-        """
-        Refresh content for specific sites or pages
-        
-        Args:
-            site: Site slug to refresh
-            pages: Optional list of pages to refresh
-            force: Force refresh even if unchanged
-        
-        Returns:
-            Refresh results
-        """
-        logger.info(f"Refreshing content for site: {site}")
-        
-        results = {
-            "site": site,
-            "refreshed": [],
-            "skipped": [],
-            "errors": []
-        }
-        
-        # Load site configuration
-        config_path = self.base_path / "config" / "targets.yaml"
-        if not config_path.exists():
-            return {
-                "status": "error",
-                "error": "Configuration file not found"
-            }
-        
-        with open(config_path) as f:
-            config = yaml.safe_load(f)
-        
-        # Find site configuration
-        site_config = None
-        for s in config.get("sites", []):
-            if s["slug"] == site:
-                site_config = s
-                break
-        
-        if not site_config:
-            return {
-                "status": "error",
-                "error": f"Site not found in configuration: {site}"
-            }
-        
-        # Determine pages to refresh
-        if pages:
-            urls = []
-            for page in pages:
-                # Find matching page URL
-                for p in site_config.get("pages", []):
-                    if page in p["path"]:
-                        urls.append(site_config["base_url"] + p["path"])
-                        break
-        else:
-            # Refresh all pages
-            urls = [
-                site_config["base_url"] + p["path"]
-                for p in site_config.get("pages", [])
-            ]
-        
-        # Refresh each page
-        for url in urls:
-            try:
-                result = await self.fetch_page(url, cache=not force)
+                        result = {
+                            "path": str(file_path.relative_to(self.sourcedocs_path)),
+                            "score": score,
+                            "source": file_path.parts[len(self.sourcedocs_path.parts)]
+                        }
+                        
+                        if include_content:
+                            # Extract preview snippet
+                            preview = self._extract_preview(content, query)
+                            result["preview"] = preview
+                        
+                        # Get file metadata
+                        stat = file_path.stat()
+                        result["metadata"] = {
+                            "size": stat.st_size,
+                            "modified": datetime.fromtimestamp(stat.st_mtime).isoformat()
+                        }
+                        
+                        results.append(result)
                 
-                if result["status"] == "success":
-                    results["refreshed"].append(url)
-                elif result["status"] == "cached" and not force:
-                    results["skipped"].append(url)
-                else:
-                    results["errors"].append({
-                        "url": url,
-                        "error": result.get("error", "Unknown error")
-                    })
+                except Exception as e:
+                    logger.warning(f"Error searching file {file_path}: {e}")
+                    continue
             
-            except Exception as e:
-                logger.error(f"Error refreshing {url}: {e}")
-                results["errors"].append({
-                    "url": url,
-                    "error": str(e)
-                })
-        
-        return results
-    
-    async def optimize_markdown(
-        self,
-        content: str,
-        source_url: Optional[str] = None,
-        optimization_level: str = "standard"
-    ) -> Dict[str, Any]:
-        """
-        Optimize raw markdown for MCP consumption
-        
-        Args:
-            content: Raw markdown content
-            source_url: Optional source URL
-            optimization_level: Level of optimization
-        
-        Returns:
-            Optimized MCP content
-        """
-        from ..core.mcp_optimizer import optimize_for{source-slug}
-        
-        try:
-            # Apply optimization
-            optimized = optimize_for{source-slug}(
-                content,
-                source_url or "manual",
-                level=optimization_level
-            )
-            
-            return {
-                "status": "success",
-                "original_size": len(content),
-                "optimized_size": len(yaml.dump(optimized)),
-                "compression_ratio": f"{(1 - len(yaml.dump(optimized)) / len(content)) * 100:.1f}%",
-                "content": optimized
-            }
+            # Sort by relevance score and limit
+            results.sort(key=lambda x: x["score"], reverse=True)
+            return results[:limit]
         
         except Exception as e:
-            logger.error(f"Error optimizing content: {e}")
+            logger.error(f"Error searching: {e}", exc_info=True)
+            return []
+    
+    async def stats(self, detailed: bool = False) -> Dict[str, Any]:
+        """
+        Get statistics about the sourcedocs repository
+        
+        Args:
+            detailed: Whether to include detailed per-source statistics
+        
+        Returns:
+            Repository statistics
+        """
+        logger.info(f"Getting stats, detailed: {detailed}")
+        
+        try:
+            total_files = 0
+            total_size = 0
+            total_lines = 0
+            total_words = 0
+            sources = {}
+            file_types = {}
+            
+            for file_path in self.sourcedocs_path.rglob("*"):
+                if file_path.is_file() and not file_path.name.startswith('.'):
+                    # Count file
+                    total_files += 1
+                    
+                    # Get file stats
+                    stat = file_path.stat()
+                    total_size += stat.st_size
+                    
+                    # Count file type
+                    suffix = file_path.suffix.lower()
+                    file_types[suffix] = file_types.get(suffix, 0) + 1
+                    
+                    # Get source from path
+                    source_name = file_path.parts[len(self.sourcedocs_path.parts)]
+                    
+                    if detailed:
+                        if source_name not in sources:
+                            sources[source_name] = {
+                                "files": 0,
+                                "size": 0,
+                                "types": {}
+                            }
+                        
+                        sources[source_name]["files"] += 1
+                        sources[source_name]["size"] += stat.st_size
+                        sources[source_name]["types"][suffix] = sources[source_name]["types"].get(suffix, 0) + 1
+                    
+                    # Count lines and words for text files
+                    if suffix in ['.md', '.txt', '.mdx']:
+                        try:
+                            content = file_path.read_text(encoding='utf-8')
+                            lines = len(content.splitlines())
+                            words = len(content.split())
+                            
+                            total_lines += lines
+                            total_words += words
+                            
+                            if detailed and source_name in sources:
+                                if "lines" not in sources[source_name]:
+                                    sources[source_name]["lines"] = 0
+                                    sources[source_name]["words"] = 0
+                                sources[source_name]["lines"] += lines
+                                sources[source_name]["words"] += words
+                        
+                        except Exception:
+                            pass  # Skip files that can't be read
+            
+            result = {
+                "status": "success",
+                "total_files": total_files,
+                "total_size_bytes": total_size,
+                "total_size_mb": round(total_size / (1024 * 1024), 2),
+                "total_lines": total_lines,
+                "total_words": total_words,
+                "file_types": file_types,
+                "generated_at": datetime.now().isoformat()
+            }
+            
+            if detailed:
+                result["sources"] = sources
+            else:
+                result["source_count"] = len(set(
+                    file_path.parts[len(self.sourcedocs_path.parts)]
+                    for file_path in self.sourcedocs_path.rglob("*")
+                    if file_path.is_file() and not file_path.name.startswith('.')
+                ))
+            
+            return result
+        
+        except Exception as e:
+            logger.error(f"Error getting stats: {e}", exc_info=True)
             return {
                 "status": "error",
                 "error": str(e)
@@ -481,113 +336,127 @@ class ContextorHandlers:
     
     # Helper methods
     
-    def _extract_site_slug(self, url: str) -> str:
-        """Extract site slug from URL"""
-        parsed = urlparse(url)
-        domain = parsed.netloc.replace("www.", "")
-        return domain.replace(".", "-")
-    
-    def _extract_page_slug(self, url: str) -> str:
-        """Extract page slug from URL"""
-        parsed = urlparse(url)
-        path = parsed.path.strip("/")
-        if not path:
-            return "index"
-        # Convert path to slug
-        return path.replace("/", "-").replace(".", "-")
-    
-    async def _check_cache(self, site: str, page: str) -> Optional[Dict]:
-        """Check if content is cached and recent"""
-        mcp_path = self.context_dir / site / "pages" / f"{page}.mdc"
-        raw_path = self.raw_dir / site / "latest" / f"{page}.md"
+    async def _list_source_detailed(
+        self,
+        source_path: Path,
+        source_slug: str,
+        since_timestamp: Optional[float],
+        include_stats: bool
+    ) -> Dict[str, Any]:
+        """Get detailed listing for a specific source"""
+        files = []
         
-        if mcp_path.exists() and raw_path.exists():
-            # Check age (cache for 24 hours by default)
-            age = datetime.now().timestamp() - mcp_path.stat().st_mtime
-            if age < 86400:  # 24 hours
-                return {
-                    "raw_path": raw_path,
-                    "mcp_path": mcp_path,
-                    "cached_at": datetime.fromtimestamp(mcp_path.stat().st_mtime).isoformat()
+        for file_path in source_path.rglob("*"):
+            if file_path.is_file() and not file_path.name.startswith('.'):
+                stat = file_path.stat()
+                
+                # Filter by timestamp if provided
+                if since_timestamp and stat.st_mtime < since_timestamp:
+                    continue
+                
+                file_info = {
+                    "path": str(file_path.relative_to(self.sourcedocs_path)),
+                    "name": file_path.name,
+                    "modified": datetime.fromtimestamp(stat.st_mtime).isoformat()
                 }
+                
+                if include_stats:
+                    file_info["size"] = stat.st_size
+                    
+                    # Add content stats for text files
+                    if file_path.suffix.lower() in ['.md', '.txt', '.mdx']:
+                        try:
+                            content = file_path.read_text(encoding='utf-8')
+                            file_info["lines"] = len(content.splitlines())
+                            file_info["words"] = len(content.split())
+                        except Exception:
+                            pass
+                
+                files.append(file_info)
         
-        return None
+        # Sort by modification time (newest first)
+        files.sort(key=lambda x: x["modified"], reverse=True)
+        
+        return {
+            "status": "success",
+            "source": source_slug,
+            "files": files,
+            "total_files": len(files)
+        }
     
-    def _extract_searchable_text(self, mcp_content: Dict) -> str:
-        """Extract searchable text from MCP content"""
-        text_parts = []
+    async def _get_source_stats(self, source_path: Path, since_timestamp: Optional[float]) -> Dict[str, Any]:
+        """Get statistics for a single source"""
+        file_count = 0
+        total_size = 0
+        latest_modified = None
         
-        # Add title
-        if "content" in mcp_content:
-            content = mcp_content["content"]
-            if "title" in content:
-                text_parts.append(content["title"])
-            
-            # Add sections
-            if "sections" in content:
-                for section in content["sections"]:
-                    if "heading" in section:
-                        text_parts.append(section["heading"])
-                    if "content" in section:
-                        text_parts.append(section["content"])
+        for file_path in source_path.rglob("*"):
+            if file_path.is_file() and not file_path.name.startswith('.'):
+                stat = file_path.stat()
+                
+                # Filter by timestamp if provided
+                if since_timestamp and stat.st_mtime < since_timestamp:
+                    continue
+                
+                file_count += 1
+                total_size += stat.st_size
+                
+                if latest_modified is None or stat.st_mtime > latest_modified:
+                    latest_modified = stat.st_mtime
         
-        # Add context topics
-        if "context" in mcp_content:
-            context = mcp_content["context"]
-            if "topics" in context:
-                text_parts.extend(context["topics"])
+        stats = {
+            "file_count": file_count,
+            "total_size": total_size
+        }
         
-        return " ".join(text_parts)
+        if latest_modified:
+            stats["last_modified"] = datetime.fromtimestamp(latest_modified).isoformat()
+        
+        return stats
     
-    def _extract_preview(self, text: str, query: str, context_chars: int = 100) -> str:
+    def _slug_to_path(self, slug: str) -> Path:
+        """Convert a slug to a file path (basic implementation)"""
+        # This is a simple implementation - could be enhanced with a proper slug mapping
+        if '/' in slug:
+            return self.sourcedocs_path / slug
+        else:
+            # Search for files matching the slug
+            for file_path in self.sourcedocs_path.rglob("*.md"):
+                if file_path.stem == slug:
+                    return file_path
+        
+        # Fallback: treat as direct path
+        return self.sourcedocs_path / f"{slug}.md"
+    
+    def _extract_preview(self, content: str, query: str, context_chars: int = 150) -> str:
         """Extract preview snippet around query match"""
-        lower_text = text.lower()
+        lower_content = content.lower()
         lower_query = query.lower()
         
-        pos = lower_text.find(lower_query)
+        pos = lower_content.find(lower_query)
         if pos == -1:
-            return text[:200] + "..." if len(text) > 200 else text
+            # No exact match, return beginning of content
+            return content[:300] + "..." if len(content) > 300 else content
         
         # Extract context around match
         start = max(0, pos - context_chars)
-        end = min(len(text), pos + len(query) + context_chars)
+        end = min(len(content), pos + len(query) + context_chars)
         
-        preview = text[start:end]
+        preview = content[start:end]
+        
+        # Clean up preview (remove incomplete lines at start/end)
+        lines = preview.split('\n')
+        if len(lines) > 1:
+            if start > 0:
+                lines = lines[1:]  # Remove potentially incomplete first line
+            if end < len(content):
+                lines = lines[:-1]  # Remove potentially incomplete last line
+            preview = '\n'.join(lines)
         
         # Add ellipsis if truncated
         if start > 0:
             preview = "..." + preview
-        if end < len(text):
+        if end < len(content):
             preview = preview + "..."
         
         return preview
-    
-    async def _update_site_index(self, site: str, page: str, metadata: Dict):
-        """Update site index with new page information"""
-        index_path = self.context_dir / site / "index.json"
-        
-        # Load existing index or create new
-        if index_path.exists():
-            with open(index_path) as f:
-                index = json.load(f)
-        else:
-            index = {
-                "site": site,
-                "pages": {},
-                "last_updated": None
-            }
-        
-        # Update page entry
-        index["pages"][page] = {
-            "url": metadata["url"],
-            "fetched_at": metadata["fetched_at"],
-            "content_hash": metadata["content_hash"],
-            "word_count": metadata["word_count"]
-        }
-        
-        index["last_updated"] = datetime.now().isoformat()
-        
-        # Save index
-        index_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(index_path, 'w') as f:
-            json.dump(index, f, indent=2)

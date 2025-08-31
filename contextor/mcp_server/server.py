@@ -1,200 +1,263 @@
 """
-Main MCP Server implementation for Contextor
+Main MCP-compatible Server implementation for Contextor using FastAPI
 """
 
 import asyncio
+import json
 import logging
-from typing import Any, Dict, List, Optional
+from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-from mcp.server import Server
-from mcp.server.stdio import stdio_transport
-from mcp.types import Tool, Resource, TextContent, ImageContent
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
+from sse_starlette.sse import EventSourceResponse
 
-from .handlers import ContextorHandlers
-from .tools import CONTEXTOR_TOOLS
+from .handlers import SourceDocsHandlers
 
 logger = logging.getLogger(__name__)
 
 
 class ContextorMCPServer:
     """
-    MCP Server for Contextor - provides web content extraction and processing tools
+    MCP-compatible Server for Contextor - serves content from sourcedocs directory
     """
     
-    def __init__(self, base_path: Optional[Path] = None, config: Optional[Dict] = None):
+    def __init__(self, sourcedocs_path: Path):
         """
         Initialize the Contextor MCP Server
         
         Args:
-            base_path: Base directory for storage (defaults to current directory)
-            config: Optional configuration dictionary
+            sourcedocs_path: Path to the sourcedocs directory
         """
-        self.base_path = base_path or Path.cwd()
-        self.config = config or {}
+        self.sourcedocs_path = sourcedocs_path.resolve()
         
-        # Initialize server with name and version
-        self.server = Server("contextor")
+        if not self.sourcedocs_path.exists():
+            raise ValueError(f"Sourcedocs path does not exist: {self.sourcedocs_path}")
         
         # Initialize handlers
-        self.handlers = ContextorHandlers(self.base_path)
+        self.handlers = SourceDocsHandlers(self.sourcedocs_path)
         
-        # Setup tools and resources
-        self._setup_tools()
-        self._setup_resources()
-        self._setup_handlers()
+        # Initialize FastAPI app
+        self.app = FastAPI(
+            title="Contextor MCP Server",
+            description="Model Context Protocol compatible server for serving sourcedocs content",
+            version="0.1.0"
+        )
         
-        logger.info(f"Contextor MCP Server initialized at {self.base_path}")
+        # Setup routes
+        self._setup_routes()
+        
+        logger.info(f"Contextor MCP Server initialized with sourcedocs: {self.sourcedocs_path}")
     
-    def _setup_tools(self):
-        """Register available MCP tools"""
+    def _setup_routes(self):
+        """Setup FastAPI routes for MCP tools"""
         
-        for tool_def in CONTEXTOR_TOOLS:
-            self.server.add_tool(Tool(**tool_def))
-            logger.debug(f"Registered tool: {tool_def['name']}")
-    
-    def _setup_resources(self):
-        """Register available resources (context files, etc.)"""
+        @self.app.get("/health")
+        async def health():
+            """Health check endpoint"""
+            return {"status": "healthy", "timestamp": datetime.now().isoformat()}
         
-        # Register {source-slug} directory as a resource
-        context_dir = self.base_path / "{source-slug}"
-        if context_dir.exists():
-            self.server.add_resource(Resource(
-                uri=f"file://{context_dir}",
-                name="Context Directory",
-                description="Directory containing MCP context files",
-                mime_type="application/x-directory"
-            ))
+        @self.app.get("/tools")
+        async def list_tools():
+            """List available MCP tools"""
+            from .tools import CONTEXTOR_TOOLS
+            return {"tools": CONTEXTOR_TOOLS}
         
-        # Register _raw directory as a resource
-        raw_dir = self.base_path / "_raw"
-        if raw_dir.exists():
-            self.server.add_resource(Resource(
-                uri=f"file://{raw_dir}",
-                name="Raw Content Directory",
-                description="Directory containing raw markdown files",
-                mime_type="application/x-directory"
-            ))
-    
-    def _setup_handlers(self):
-        """Setup request handlers for tools"""
-        
-        @self.server.call_tool()
-        async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent]:
-            """Handle tool invocations"""
-            
-            logger.info(f"Tool invoked: {name} with args: {arguments}")
-            
+        @self.app.post("/tools/list_source")
+        async def list_source_tool(request: Dict[str, Any]):
+            """List source tool endpoint"""
             try:
-                # Route to appropriate handler
-                if name == "fetch_page":
-                    result = await self.handlers.fetch_page(**arguments)
-                
-                elif name == "search{source-slug}":
-                    result = await self.handlers.search{source-slug}(**arguments)
-                
-                elif name == "get_mcp_file":
-                    result = await self.handlers.get_mcp_file(**arguments)
-                
-                elif name == "list_sites":
-                    result = await self.handlers.list_sites(**arguments)
-                
-                elif name == "refresh_content":
-                    result = await self.handlers.refresh_content(**arguments)
-                
-                elif name == "get_raw_markdown":
-                    result = await self.handlers.get_raw_markdown(**arguments)
-                
-                elif name == "optimize_markdown":
-                    result = await self.handlers.optimize_markdown(**arguments)
-                
-                else:
-                    raise ValueError(f"Unknown tool: {name}")
-                
-                # Format response
-                if isinstance(result, dict):
-                    content = self._format_dict_response(result)
-                elif isinstance(result, list):
-                    content = self._format_list_response(result)
-                else:
-                    content = str(result)
-                
-                return [TextContent(type="text", text=content)]
-                
+                result = await self.handlers.list_source(**request)
+                return result
             except Exception as e:
-                logger.error(f"Error handling tool {name}: {e}", exc_info=True)
-                return [TextContent(
-                    type="text",
-                    text=f"Error: {str(e)}"
-                )]
+                logger.error(f"Error in list_source: {e}", exc_info=True)
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/tools/get_file")
+        async def get_file_tool(request: Dict[str, Any]):
+            """Get file tool endpoint"""
+            try:
+                result = await self.handlers.get_file(**request)
+                if result.get("status") == "not_found":
+                    raise HTTPException(status_code=404, detail=result.get("error"))
+                return result
+            except HTTPException:
+                raise
+            except Exception as e:
+                logger.error(f"Error in get_file: {e}", exc_info=True)
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/tools/search")
+        async def search_tool(request: Dict[str, Any]):
+            """Search tool endpoint"""
+            try:
+                result = await self.handlers.search(**request)
+                return {"results": result}
+            except Exception as e:
+                logger.error(f"Error in search: {e}", exc_info=True)
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/tools/stats")
+        async def stats_tool(request: Dict[str, Any]):
+            """Stats tool endpoint"""
+            try:
+                result = await self.handlers.stats(**request)
+                return result
+            except Exception as e:
+                logger.error(f"Error in stats: {e}", exc_info=True)
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        # REST-style endpoints for easier HTTP access
+        @self.app.get("/sources")
+        async def list_sources(
+            source_slug: Optional[str] = None,
+            since: Optional[str] = None,
+            include_stats: bool = False
+        ):
+            """REST endpoint to list sources"""
+            result = await self.handlers.list_source(
+                source_slug=source_slug,
+                since=since,
+                include_stats=include_stats
+            )
+            return result
+        
+        @self.app.get("/sources/{source_slug}")
+        async def get_source_details(source_slug: str, include_stats: bool = False):
+            """REST endpoint to get specific source details"""
+            result = await self.handlers.list_source(
+                source_slug=source_slug,
+                include_stats=include_stats
+            )
+            if result.get("status") == "not_found":
+                raise HTTPException(status_code=404, detail=result.get("error"))
+            return result
+        
+        @self.app.get("/files")
+        async def get_file_by_path(path: Optional[str] = None, slug: Optional[str] = None):
+            """REST endpoint to get file by path or slug"""
+            if not path and not slug:
+                raise HTTPException(status_code=400, detail="Either path or slug must be provided")
+            
+            result = await self.handlers.get_file(path=path, slug=slug)
+            if result.get("status") == "not_found":
+                raise HTTPException(status_code=404, detail=result.get("error"))
+            return result
+        
+        @self.app.get("/search")
+        async def search_content(
+            query: str,
+            source_filter: Optional[str] = None,
+            limit: int = 10,
+            include_content: bool = True
+        ):
+            """REST endpoint to search content"""
+            result = await self.handlers.search(
+                query=query,
+                source_filter=source_filter,
+                limit=limit,
+                include_content=include_content
+            )
+            return {"results": result}
+        
+        @self.app.get("/stats")
+        async def get_stats(detailed: bool = False):
+            """REST endpoint to get repository statistics"""
+            result = await self.handlers.stats(detailed=detailed)
+            return result
+        
+        # Server-Sent Events endpoint for real-time updates
+        @self.app.get("/stream")
+        async def stream_updates(request: Request):
+            """SSE endpoint for real-time updates"""
+            
+            async def event_generator():
+                last_check = datetime.now()
+                
+                while True:
+                    if await request.is_disconnected():
+                        break
+                    
+                    try:
+                        # Check for any updates since last check
+                        current_time = datetime.now()
+                        since_iso = last_check.isoformat()
+                        
+                        # Get updated sources
+                        updates = await self.handlers.list_source(since=since_iso, include_stats=True)
+                        
+                        if updates.get("sources"):
+                            # Send update event
+                            event_data = {
+                                "type": "sources_updated",
+                                "timestamp": current_time.isoformat(),
+                                "data": updates
+                            }
+                            
+                            yield {
+                                "event": "update",
+                                "data": json.dumps(event_data)
+                            }
+                        
+                        last_check = current_time
+                        await asyncio.sleep(30)  # Check every 30 seconds
+                        
+                    except Exception as e:
+                        logger.error(f"Error in SSE stream: {e}")
+                        yield {
+                            "event": "error",
+                            "data": json.dumps({"error": str(e)})
+                        }
+                        await asyncio.sleep(5)
+            
+            return EventSourceResponse(event_generator())
     
-    def _format_dict_response(self, data: Dict) -> str:
-        """Format dictionary response as readable text"""
-        import json
-        return json.dumps(data, indent=2, default=str)
-    
-    def _format_list_response(self, data: List) -> str:
-        """Format list response as readable text"""
-        import json
-        return json.dumps(data, indent=2, default=str)
-    
-    async def run(self):
-        """Run the MCP server using stdio transport"""
-        
-        logger.info("Starting Contextor MCP Server...")
-        
-        async with stdio_transport(self.server):
-            logger.info("Server running on stdio transport")
-            # Keep server running
-            await asyncio.Event().wait()
-    
-    async def run_sse(self, host: str = "0.0.0.0", port: int = 8080):
-        """Run the MCP server with Server-Sent Events transport for HTTP"""
-        
-        from mcp.server.sse import sse_transport
-        
-        logger.info(f"Starting Contextor MCP Server on {host}:{port}...")
-        
-        async with sse_transport(self.server, host=host, port=port):
-            logger.info(f"Server running on http://{host}:{port}")
-            # Keep server running
-            await asyncio.Event().wait()
+    def get_app(self):
+        """Get the FastAPI app instance"""
+        return self.app
+
+
+def create_app(sourcedocs_path: Path) -> FastAPI:
+    """Factory function to create FastAPI app"""
+    server = ContextorMCPServer(sourcedocs_path)
+    return server.get_app()
 
 
 def main():
     """Main entry point for running the server"""
     
     import argparse
+    import os
+    import uvicorn
     
     parser = argparse.ArgumentParser(description="Contextor MCP Server")
     parser.add_argument(
-        "--transport",
-        choices=["stdio", "sse"],
-        default="stdio",
-        help="Transport method (stdio or sse)"
-    )
-    parser.add_argument(
         "--host",
         default="0.0.0.0",
-        help="Host for SSE transport"
+        help="Host to bind to"
     )
     parser.add_argument(
         "--port",
         type=int,
         default=8080,
-        help="Port for SSE transport"
+        help="Port to bind to"
     )
     parser.add_argument(
-        "--base-path",
+        "--sourcedocs-path",
         type=Path,
-        default=Path.cwd(),
-        help="Base path for storage"
+        help="Path to sourcedocs directory (defaults to ./sourcedocs or env var SOURCEDOCS_PATH)"
     )
     parser.add_argument(
         "--log-level",
         choices=["DEBUG", "INFO", "WARNING", "ERROR"],
         default="INFO",
         help="Logging level"
+    )
+    parser.add_argument(
+        "--reload",
+        action="store_true",
+        help="Enable auto-reload for development"
     )
     
     args = parser.parse_args()
@@ -205,13 +268,33 @@ def main():
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
     
-    # Create and run server
-    server = ContextorMCPServer(base_path=args.base_path)
-    
-    if args.transport == "stdio":
-        asyncio.run(server.run())
+    # Determine sourcedocs path
+    if args.sourcedocs_path:
+        sourcedocs_path = args.sourcedocs_path
+    elif os.getenv("SOURCEDOCS_PATH"):
+        sourcedocs_path = Path(os.getenv("SOURCEDOCS_PATH"))
     else:
-        asyncio.run(server.run_sse(host=args.host, port=args.port))
+        # Default to ./sourcedocs relative to current working directory
+        sourcedocs_path = Path.cwd() / "sourcedocs"
+    
+    logger.info(f"Using sourcedocs path: {sourcedocs_path}")
+    
+    # Create app
+    try:
+        app = create_app(sourcedocs_path)
+        
+        # Run server
+        uvicorn.run(
+            app,
+            host=args.host,
+            port=args.port,
+            log_level=args.log_level.lower(),
+            reload=args.reload
+        )
+    
+    except Exception as e:
+        logger.error(f"Failed to start server: {e}")
+        exit(1)
 
 
 if __name__ == "__main__":

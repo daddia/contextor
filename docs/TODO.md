@@ -15,22 +15,6 @@
 
 ## Current Sprint
 
-### Sprint 4 — **MCP Server (Read-only)** → Release v0.2.0
-
-- [ ] **`contextor-server` (Python, SSE)** (P1 · M · Status: Not started)  
-  Serve from `sourcedocs/{source-slug}`; read-only by default.
-
-- [ ] **Tools / endpoints** (P1 · S · Status: Not started)  
-  `list{source-slug}(since?)`, `get_file(path|slug)`, `search(query, limit)`, `stats()`.
-
-- [ ] **Packaging & runner** (P2 · S · Status: Not started)  
-  Poetry script entrypoint; optional Dockerfile; health endpoint.
-
-- [ ] **Tests & docs** (P2 · M · Status: Not started)  
-  Contract tests for tool responses; quickstart guide.
-
----
-
 ### Sprint 5 — **Quality & Performance** → Release v0.2.1
 
 - [ ] **Performance budget** (P2 · S · Status: Not started)  
@@ -107,7 +91,18 @@
 ## Completed
 > Pre-pivot work retained for later phases (do not include in active backlog).
 
-### Sprint 3 — **Advanced Content Intelligence**  - *COMPLETE*
+### **MCP Server (Read-only)** - *COMPLETE*
+
+- [x] **`mcp-server` (Python, SSE)** (P1 · M · Status: Not started)  
+  Serve from `sourcedocs/{source-slug}`; read-only by default.
+- [x] **Tools / endpoints** (P1 · S · Status: Not started)  
+  `list{source-slug}(since?)`, `get_file(path|slug)`, `search(query, limit)`, `stats()`.
+- [x] **Packaging & runner** (P2 · S · Status: Not started)  
+  Poetry script entrypoint; optional Dockerfile; health endpoint.
+- [x] **Tests & docs** (P2 · M · Status: Not started)  
+  Contract tests for tool responses; quickstart guide.
+
+### **Advanced Content Intelligence** - *COMPLETE*
 
 - [x] **Advanced Topic** Automatic topic extraction 
   - [x] **Topic Extraction**: from content using keywords, headings, and metadata.
@@ -117,8 +112,6 @@
   - [x] **Duplicate detection**: Flag near-duplicate pages across sources.
   - [x] **Content similarity**: Detect duplicate or highly similar content
 - [x] **Quality scoring**: Rate content quality, completeness, freshness
-
----
 
 ### **`sourcedocs` Integration & CI** - *COMPLETE*
 
