@@ -4,6 +4,7 @@ import json
 import tempfile
 import time
 from pathlib import Path
+from typing import Any
 
 from .logging_config import get_logger, log_operation, log_operation_complete
 
@@ -20,7 +21,7 @@ class PerformanceBenchmark:
             budget_seconds: Maximum allowed time in seconds (default: 15 minutes)
         """
         self.budget_seconds = budget_seconds
-        self.results: list[dict] = []
+        self.results: list[dict[str, Any]] = []
 
     def create_test_dataset(
         self, size: str, base_path: Path, file_count: int, lines_per_file: int
@@ -123,7 +124,7 @@ class PerformanceBenchmark:
         dataset_name: str,
         repo: str = "test/repo",
         ref: str = "main",
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Benchmark the optimize operation.
 
         Args:
@@ -265,7 +266,7 @@ class PerformanceBenchmark:
 
     def run_full_benchmark(
         self, base_path: Path | None = None, cleanup: bool = True
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """Run a full performance benchmark with multiple dataset sizes.
 
         Args:
@@ -387,7 +388,7 @@ class PerformanceBenchmark:
 
         logger.info("Benchmark results saved", path=str(output_path))
 
-    def _generate_summary(self) -> dict:
+    def _generate_summary(self) -> dict[str, Any]:
         """Generate a summary of benchmark results."""
         if not self.results:
             return {}

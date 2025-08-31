@@ -13,7 +13,7 @@ logger = structlog.get_logger()
 class SimilarityAnalyzer:
     """Analyzes document similarity and detects duplicates."""
 
-    def __init__(self, config: dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """Initialize the similarity analyzer.
 
         Args:
@@ -114,7 +114,7 @@ class SimilarityAnalyzer:
 
         return normalized.strip()
 
-    def _generate_content_vector(self, content: str) -> Counter:
+    def _generate_content_vector(self, content: str) -> Counter[str]:
         """Generate a word frequency vector for content.
 
         Args:
@@ -207,7 +207,9 @@ class SimilarityAnalyzer:
 
         return content.strip()
 
-    def _calculate_similarity(self, vector1: Counter, vector2: Counter) -> float:
+    def _calculate_similarity(
+        self, vector1: Counter[str], vector2: Counter[str]
+    ) -> float:
         """Calculate cosine similarity between two word vectors.
 
         Args:

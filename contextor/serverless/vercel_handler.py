@@ -30,7 +30,7 @@ class handler(BaseHTTPRequestHandler):
     Vercel Functions handler for MCP requests
     """
 
-    def do_OPTIONS(self):
+    def do_OPTIONS(self) -> None:
         """Handle CORS preflight requests"""
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
@@ -38,7 +38,7 @@ class handler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         self.end_headers()
 
-    def do_GET(self):
+    def do_GET(self) -> None:
         """Handle GET requests"""
 
         try:
@@ -85,7 +85,7 @@ class handler(BaseHTTPRequestHandler):
             logger.error(f"Error handling GET request: {e}", exc_info=True)
             self.send_error(500, str(e))
 
-    def do_POST(self):
+    def do_POST(self) -> None:
         """Handle POST requests"""
 
         try:
@@ -159,14 +159,11 @@ class handler(BaseHTTPRequestHandler):
         import asyncio
 
         # Map tool names to handler methods
-        tool_map = {
-            "fetch_page": handlers.fetch_page,
+        tool_map: dict[str, Any] = {
+            "list_source": handlers.list_source,
+            "get_file": handlers.get_file,
             "search": handlers.search,
-            "get_mcp_file": handlers.get_mcp_file,
-            "get_raw_markdown": handlers.get_raw_markdown,
-            "list_sites": handlers.list_sites,
-            "refresh_content": handlers.refresh_content,
-            "optimize_markdown": handlers.optimize_markdown,
+            "stats": handlers.stats,
         }
 
         if tool_name not in tool_map:
@@ -187,7 +184,7 @@ class handler(BaseHTTPRequestHandler):
 
         return result
 
-    def _list_resources(self) -> list:
+    def _list_resources(self) -> list[dict[str, Any]]:
         """
         List available resources
 
@@ -224,7 +221,7 @@ class handler(BaseHTTPRequestHandler):
 
 
 # Alternative async handler for Vercel Edge Functions
-async def edge_handler(request):
+async def edge_handler(request: Any) -> Any:
     """
     Vercel Edge Functions handler (async)
 
@@ -265,14 +262,11 @@ async def edge_handler(request):
                 tool_name = path.split("/")[-1]
 
                 # Execute tool
-                tool_map = {
-                    "fetch_page": handlers.fetch_page,
+                tool_map: dict[str, Any] = {
+                    "list_source": handlers.list_source,
+                    "get_file": handlers.get_file,
                     "search": handlers.search,
-                    "get_mcp_file": handlers.get_mcp_file,
-                    "get_raw_markdown": handlers.get_raw_markdown,
-                    "list_sites": handlers.list_sites,
-                    "refresh_content": handlers.refresh_content,
-                    "optimize_markdown": handlers.optimize_markdown,
+                    "stats": handlers.stats,
                 }
 
                 if tool_name not in tool_map:

@@ -3,6 +3,7 @@
 import json
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import click
 
@@ -34,7 +35,7 @@ logger = get_logger(__name__)
     help="Output logs in JSON format (auto-detected by default)",
 )
 @click.pass_context
-def cli(ctx, log_level, json_logs):
+def cli(ctx: Any, log_level: str, json_logs: bool) -> None:
     """Convert documentation trees to Model Context Protocol files."""
     # Configure logging early
     configure_logging(level=log_level, json_output=json_logs)
@@ -44,7 +45,7 @@ def cli(ctx, log_level, json_logs):
 
 
 @cli.command()
-def list_projects():
+def list_projects() -> None:
     """List available project configurations."""
     config_manager = ProjectConfigManager()
     projects = config_manager.list_available_projects()
@@ -96,16 +97,16 @@ def list_projects():
 )
 @click.option("--metrics-output", default="", help="Output path for run metrics JSON")
 def optimize(
-    src,
-    out,
-    repo,
-    ref,
-    topics,
-    profile,
-    project_config,
-    auto_detect_config,
-    metrics_output,
-):
+    src: str,
+    out: str,
+    repo: str,
+    ref: str,
+    topics: str,
+    profile: str,
+    project_config: str,
+    auto_detect_config: bool,
+    metrics_output: str,
+) -> None:
     """Convert a documentation directory to .mdc files.
 
     This command processes Markdown/MDX files from a source directory,
@@ -167,7 +168,7 @@ def optimize(
             ref = project_cfg.branch
 
         # Use project config profile if not overridden
-        if profile == "balanced":
+        if profile == "balanced" and project_cfg.profile:
             profile = project_cfg.profile
 
     # Validate required parameters after project config override
@@ -345,7 +346,9 @@ def optimize(
 @click.option(
     "--metrics-output", default="", help="Output path for analysis metrics JSON"
 )
-def intelligence(source_dir, features, config, incremental, metrics_output):
+def intelligence(
+    source_dir: str, features: str, config: str, incremental: bool, metrics_output: str
+) -> None:
     """Run Advanced Content Intelligence analysis on .mdc files.
 
     This command analyzes existing .mdc files to extract topics, identify
@@ -384,7 +387,7 @@ def intelligence(source_dir, features, config, incremental, metrics_output):
         feature_set = {f.strip() for f in features.split(",") if f.strip()}
 
     # Load configuration if provided
-    analysis_config = {}
+    analysis_config: dict[str, Any] = {}
     if config:
         config_path = Path(config)
         if config_path.exists():
@@ -473,7 +476,9 @@ def intelligence(source_dir, features, config, incremental, metrics_output):
     default=False,
     help="Keep test data after benchmarking",
 )
-def benchmark(budget, output, test_data_path, keep_test_data):
+def benchmark(
+    budget: int, output: str, test_data_path: str, keep_test_data: bool
+) -> None:
     """Run performance benchmarks to validate performance budget.
 
     This command creates test datasets of varying sizes and measures
@@ -566,7 +571,7 @@ def benchmark(budget, output, test_data_path, keep_test_data):
         raise click.Abort() from e
 
 
-def main():
+def main() -> None:
     """Entry point for the CLI."""
     cli()
 

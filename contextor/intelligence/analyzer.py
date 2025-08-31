@@ -93,7 +93,7 @@ class IntelligenceAnalyzer:
 
         # Phase 1: Individual document analysis
         documents = []
-        analysis_results = {
+        analysis_results: dict[str, Any] = {
             "processed": 0,
             "updated": 0,
             "skipped": 0,

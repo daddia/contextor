@@ -236,6 +236,7 @@ class SourceDocsHandlers:
             def get_score(x: dict[str, Any]) -> float:
                 score = x.get("score", 0)
                 return float(score) if score is not None else 0.0
+
             results.sort(key=get_score, reverse=True)
             return results[:limit]
 

@@ -10,7 +10,7 @@ logger = structlog.get_logger()
 class CrossLinker:
     """Identifies relationships and suggests cross-links between documents."""
 
-    def __init__(self, config: dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """Initialize the cross-linker.
 
         Args:

@@ -51,23 +51,23 @@ class ContextorMCPServer:
             f"Contextor MCP Server initialized with sourcedocs: {self.sourcedocs_path}"
         )
 
-    def _setup_routes(self):
+    def _setup_routes(self) -> None:
         """Setup FastAPI routes for MCP tools"""
 
         @self.app.get("/health")
-        async def health():
+        async def health() -> dict[str, str]:
             """Health check endpoint"""
             return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
         @self.app.get("/tools")
-        async def list_tools():
+        async def list_tools() -> dict[str, Any]:
             """List available MCP tools"""
             from .tools import CONTEXTOR_TOOLS
 
             return {"tools": CONTEXTOR_TOOLS}
 
         @self.app.post("/tools/list_source")
-        async def list_source_tool(request: dict[str, Any]):
+        async def list_source_tool(request: dict[str, Any]) -> dict[str, Any]:
             """List source tool endpoint"""
             try:
                 result = await self.handlers.list_source(**request)
@@ -77,7 +77,7 @@ class ContextorMCPServer:
                 raise HTTPException(status_code=500, detail=str(e)) from e
 
         @self.app.post("/tools/get_file")
-        async def get_file_tool(request: dict[str, Any]):
+        async def get_file_tool(request: dict[str, Any]) -> dict[str, Any]:
             """Get file tool endpoint"""
             try:
                 result = await self.handlers.get_file(**request)
@@ -91,7 +91,7 @@ class ContextorMCPServer:
                 raise HTTPException(status_code=500, detail=str(e)) from e
 
         @self.app.post("/tools/search")
-        async def search_tool(request: dict[str, Any]):
+        async def search_tool(request: dict[str, Any]) -> dict[str, Any]:
             """Search tool endpoint"""
             try:
                 result = await self.handlers.search(**request)
@@ -101,7 +101,7 @@ class ContextorMCPServer:
                 raise HTTPException(status_code=500, detail=str(e)) from e
 
         @self.app.post("/tools/stats")
-        async def stats_tool(request: dict[str, Any]):
+        async def stats_tool(request: dict[str, Any]) -> dict[str, Any]:
             """Stats tool endpoint"""
             try:
                 result = await self.handlers.stats(**request)
@@ -116,7 +116,7 @@ class ContextorMCPServer:
             source_slug: str | None = None,
             since: str | None = None,
             include_stats: bool = False,
-        ):
+        ) -> dict[str, Any]:
             """REST endpoint to list sources"""
             result = await self.handlers.list_source(
                 source_slug=source_slug, since=since, include_stats=include_stats
@@ -124,7 +124,9 @@ class ContextorMCPServer:
             return result
 
         @self.app.get("/sources/{source_slug}")
-        async def get_source_details(source_slug: str, include_stats: bool = False):
+        async def get_source_details(
+            source_slug: str, include_stats: bool = False
+        ) -> dict[str, Any]:
             """REST endpoint to get specific source details"""
             result = await self.handlers.list_source(
                 source_slug=source_slug, include_stats=include_stats
@@ -134,7 +136,9 @@ class ContextorMCPServer:
             return result
 
         @self.app.get("/files")
-        async def get_file_by_path(path: str | None = None, slug: str | None = None):
+        async def get_file_by_path(
+            path: str | None = None, slug: str | None = None
+        ) -> dict[str, Any]:
             """REST endpoint to get file by path or slug"""
             if not path and not slug:
                 raise HTTPException(
@@ -152,7 +156,7 @@ class ContextorMCPServer:
             source_filter: str | None = None,
             limit: int = 10,
             include_content: bool = True,
-        ):
+        ) -> dict[str, Any]:
             """REST endpoint to search content"""
             result = await self.handlers.search(
                 query=query,
@@ -163,17 +167,17 @@ class ContextorMCPServer:
             return {"results": result}
 
         @self.app.get("/stats")
-        async def get_stats(detailed: bool = False):
+        async def get_stats(detailed: bool = False) -> dict[str, Any]:
             """REST endpoint to get repository statistics"""
             result = await self.handlers.stats(detailed=detailed)
             return result
 
         # Server-Sent Events endpoint for real-time updates
         @self.app.get("/stream")
-        async def stream_updates(request: Request):
+        async def stream_updates(request: Request) -> Any:
             """SSE endpoint for real-time updates"""
 
-            async def event_generator():
+            async def event_generator() -> Any:
                 last_check = datetime.now()
 
                 while True:
@@ -210,7 +214,7 @@ class ContextorMCPServer:
 
             return EventSourceResponse(event_generator())
 
-    def get_app(self):
+    def get_app(self) -> FastAPI:
         """Get the FastAPI app instance"""
         return self.app
 
@@ -221,7 +225,7 @@ def create_app(sourcedocs_path: Path) -> FastAPI:
     return server.get_app()
 
 
-def main():
+def main() -> None:
     """Main entry point for running the server"""
 
     import argparse
@@ -259,7 +263,7 @@ def main():
     if args.sourcedocs_path:
         sourcedocs_path = args.sourcedocs_path
     elif os.getenv("SOURCEDOCS_PATH"):
-        sourcedocs_path = Path(os.getenv("SOURCEDOCS_PATH"))
+        sourcedocs_path = Path(os.getenv("SOURCEDOCS_PATH", ""))
     else:
         # Default to ./sourcedocs relative to current working directory
         sourcedocs_path = Path.cwd() / "sourcedocs"

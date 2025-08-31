@@ -5,6 +5,7 @@ AWS Lambda handler for Contextor MCP Server
 import json
 import logging
 import os
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -150,14 +151,11 @@ async def execute_tool(tool_name: str, arguments: dict[str, Any]) -> dict[str, A
     logger.info(f"Executing tool: {tool_name} with args: {arguments}")
 
     # Map tool names to handler methods
-    tool_map = {
-        "fetch_page": handlers.fetch_page,
+    tool_map: dict[str, Any] = {
+        "list_source": handlers.list_source,
+        "get_file": handlers.get_file,
         "search": handlers.search,
-        "get_mcp_file": handlers.get_mcp_file,
-        "get_raw_markdown": handlers.get_raw_markdown,
-        "list_sites": handlers.list_sites,
-        "refresh_content": handlers.refresh_content,
-        "optimize_markdown": handlers.optimize_markdown,
+        "stats": handlers.stats,
     }
 
     if tool_name not in tool_map:
@@ -170,7 +168,7 @@ async def execute_tool(tool_name: str, arguments: dict[str, Any]) -> dict[str, A
     return result
 
 
-def list_resources() -> list:
+def list_resources() -> list[dict[str, Any]]:
     """
     List available resources
 
@@ -238,14 +236,26 @@ def async_lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
             }
         else:
             # Use sync handler for non-async operations
-            return lambda_handler(event, context)
+            return loop.run_until_complete(lambda_handler(event, context))
 
     finally:
         loop.close()
 
 
 # Environment variable configuration
+handler: Callable[[dict[str, Any], Any], dict[str, Any]]
 if os.environ.get("ASYNC_HANDLER", "false").lower() == "true":
     handler = async_lambda_handler
 else:
-    handler = lambda_handler
+    # Need to create a sync wrapper for the async lambda_handler
+    def sync_lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
+        import asyncio
+
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            return loop.run_until_complete(lambda_handler(event, context))
+        finally:
+            loop.close()
+
+    handler = sync_lambda_handler
