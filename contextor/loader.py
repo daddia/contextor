@@ -10,7 +10,6 @@ from typing import Any
 
 import frontmatter
 import structlog
-import yaml
 
 logger = structlog.get_logger()
 
@@ -29,7 +28,7 @@ class DocumentLoader:
     """Loads and discovers Markdown/MDX files from a directory."""
 
     def __init__(
-        self, source_dir: Path, repo: str, ref: str, config_path: Path | None = None, project_config: Any = None
+        self, source_dir: Path, repo: str, ref: str, project_config: Any = None
     ):
         """Initialize the document loader.
 
@@ -37,21 +36,18 @@ class DocumentLoader:
             source_dir: Source directory to scan
             repo: Repository identifier (e.g., 'vercel/next.js')
             ref: Git reference (branch or commit SHA)
-            config_path: Optional configuration file path
             project_config: Optional project configuration object
         """
         self.source_dir = Path(source_dir)
         self.repo = repo
         self.ref = ref
         self.project_config = project_config
-        self.config = self._load_config(config_path)
         
-        # Override with project config if available
+        # Use project config or defaults
         if project_config:
-            legacy_config = project_config.to_legacy_format()
-            # Merge project config with existing config (project config takes precedence)
-            for key, value in legacy_config.items():
-                self.config[key] = value
+            self.config = project_config.to_legacy_format()
+        else:
+            self.config = {}
 
         # Default patterns
         self.include_patterns = self.config.get(
@@ -71,17 +67,7 @@ class DocumentLoader:
             ],
         )
 
-    def _load_config(self, config_path: Path | None) -> dict[str, Any]:
-        """Load configuration from YAML file."""
-        if not config_path or not config_path.exists():
-            return {}
 
-        try:
-            with open(config_path, encoding="utf-8") as f:
-                return yaml.safe_load(f) or {}
-        except Exception as e:
-            logger.warning("Failed to load config", path=config_path, error=str(e))
-            return {}
 
     def _should_include_file(self, file_path: Path) -> bool:
         """Check if a file should be included based on patterns."""

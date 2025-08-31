@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import shutil
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -255,3 +257,121 @@ class ProjectConfigManager:
             logger.error("Failed to create project configuration", 
                         project=project_name, path=config_path, error=str(e))
             return False
+
+    def sync_with_context7(self, context7_path: Path, project_name: str) -> Optional[ProjectConfig]:
+        """Synchronize with upstream context7.json file.
+        
+        Args:
+            context7_path: Path to the context7.json file in the source repository
+            project_name: Name to use for the project configuration
+            
+        Returns:
+            ProjectConfig instance if successful, None otherwise
+        """
+        try:
+            # Read the upstream context7.json
+            with open(context7_path, "r", encoding="utf-8") as f:
+                context7_data = json.load(f)
+            
+            logger.info("Found context7.json", path=context7_path, project=project_name)
+            
+            # Convert context7 format to our internal format if needed
+            # Context7 format should already be compatible, but we may need to add our extensions
+            if "settings" not in context7_data:
+                # If it's a raw context7 format, wrap it
+                config_data = {"settings": context7_data, "tags": {}}
+            else:
+                config_data = context7_data
+            
+            # Add sync metadata
+            config_data["settings"]["_sync"] = {
+                "source_file": str(context7_path),
+                "synced_at": datetime.utcnow().isoformat() + "Z",
+                "auto_detected": True
+            }
+            
+            # Determine project name from context7 data if not provided
+            if project_name == "detected":
+                # Try to infer from title or repo
+                title = config_data["settings"].get("title", "")
+                repo = config_data["settings"].get("project", "").lstrip("/").split("/")[-1]
+                project_name = (title.lower().replace(" ", "").replace(".", "") or 
+                               repo.lower().replace("-", "").replace("_", ""))
+            
+            # Save/update our local copy
+            local_config_path = self.config_dir / f"{project_name}.json"
+            
+            # Check if we need to update (compare timestamps or content)
+            should_update = True
+            if local_config_path.exists():
+                try:
+                    with open(local_config_path, "r", encoding="utf-8") as f:
+                        existing_data = json.load(f)
+                    
+                    # Compare core settings (ignoring sync metadata)
+                    existing_settings = {k: v for k, v in existing_data.get("settings", {}).items() 
+                                       if not k.startswith("_")}
+                    new_settings = {k: v for k, v in config_data["settings"].items() 
+                                  if not k.startswith("_")}
+                    
+                    if existing_settings == new_settings:
+                        logger.info("Context7 configuration unchanged", project=project_name)
+                        should_update = False
+                    else:
+                        logger.info("Context7 configuration updated", project=project_name)
+                        
+                except Exception as e:
+                    logger.warning("Failed to compare existing config", error=str(e))
+            
+            if should_update:
+                # Ensure directory exists
+                self.config_dir.mkdir(parents=True, exist_ok=True)
+                
+                # Write updated configuration
+                with open(local_config_path, "w", encoding="utf-8") as f:
+                    json.dump(config_data, f, indent=2)
+                
+                logger.info("Synchronized context7 configuration", 
+                           project=project_name, source=context7_path, target=local_config_path)
+            
+            # Clear cache and return new config
+            self._configs_cache.pop(project_name, None)
+            return self.load_project_config(project_name)
+            
+        except Exception as e:
+            logger.error("Failed to sync with context7.json", 
+                        path=context7_path, project=project_name, error=str(e))
+            return None
+
+    def detect_and_sync_context7(self, source_dir: Path, project_name: str = "detected") -> Optional[ProjectConfig]:
+        """Detect and sync with context7.json in a source directory.
+        
+        Args:
+            source_dir: Directory to search for context7.json
+            project_name: Name to use for the project configuration
+            
+        Returns:
+            ProjectConfig instance if found and synced, None otherwise
+        """
+        # Search locations in order of preference
+        search_paths = [
+            source_dir / "context7.json",  # In the source directory itself
+            source_dir.parent / "context7.json",  # In the parent directory (common for docs subdirs)
+            source_dir / ".context7" / "context7.json",  # In a .context7 subdirectory
+        ]
+        
+        # Also check if source_dir is a docs directory and look in parent
+        if source_dir.name in ["docs", "documentation", "doc"]:
+            search_paths.insert(1, source_dir.parent / "context7.json")
+        
+        context7_path = None
+        for path in search_paths:
+            if path.exists():
+                context7_path = path
+                break
+        
+        if not context7_path:
+            logger.debug("No context7.json found", source_dir=source_dir, searched=search_paths)
+            return None
+        
+        return self.sync_with_context7(context7_path, project_name)

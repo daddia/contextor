@@ -57,10 +57,10 @@ def list_projects():
     default="balanced",
     help="Optimization profile: lossless, balanced, or compact",
 )
-@click.option("--config", default="", help="Configuration file path (YAML)")
 @click.option("--project-config", default="", help="Project configuration name (e.g., 'nextjs', 'react')")
+@click.option("--auto-detect-context7", is_flag=True, default=True, help="Automatically detect and use context7.json from target repo")
 @click.option("--metrics-output", default="", help="Output path for run metrics JSON")
-def optimize(src, out, repo, ref, topics, profile, config, project_config, metrics_output):
+def optimize(src, out, repo, ref, topics, profile, project_config, auto_detect_context7, metrics_output):
     """Convert a documentation directory to .mdc files.
 
     This command processes Markdown/MDX files from a source directory,
@@ -69,17 +69,18 @@ def optimize(src, out, repo, ref, topics, profile, config, project_config, metri
     # Convert string paths to Path objects
     src_path = Path(src)
     out_path = Path(out)
-    config_path = Path(config) if config else None
 
     # Validate source directory exists
     if not src_path.exists() or not src_path.is_dir():
         logger.error("Source directory does not exist or is not a directory", src=src)
         raise click.Abort()
 
+    # Initialize config manager
+    config_manager = ProjectConfigManager()
+    
     # Load project configuration if specified
     project_cfg = None
     if project_config:
-        config_manager = ProjectConfigManager()
         project_cfg = config_manager.load_project_config(project_config)
         if not project_cfg:
             logger.error("Project configuration not found", project=project_config)
@@ -87,6 +88,16 @@ def optimize(src, out, repo, ref, topics, profile, config, project_config, metri
         
         logger.info("Using project configuration", 
                    project=project_config, title=project_cfg.title)
+
+    # Check for context7.json in source directory if auto-detect is enabled
+    if auto_detect_context7:
+        detected_config = config_manager.detect_and_sync_context7(src_path, project_config or "detected")
+        if detected_config:
+            # Use detected config if no explicit project config was provided
+            if not project_cfg:
+                project_cfg = detected_config
+                logger.info("Using auto-detected context7 configuration", 
+                           title=project_cfg.title, repo=project_cfg.repo_url)
 
     # Override parameters with project config if available
     if project_cfg:
@@ -135,7 +146,7 @@ def optimize(src, out, repo, ref, topics, profile, config, project_config, metri
         topic_list = project_cfg.topics
 
     # Initialize components
-    loader = DocumentLoader(src_path, repo=repo, ref=ref, config_path=config_path, project_config=project_cfg)
+    loader = DocumentLoader(src_path, repo=repo, ref=ref, project_config=project_cfg)
     emitter = MDCEmitter(out_path)
 
     # Process files
