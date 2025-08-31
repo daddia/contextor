@@ -14,6 +14,7 @@ help:
 	@echo ""
 	@echo "Core Operations:"
 	@echo "  optimize     Run contextor optimize (requires --src, --out, --repo, --ref)"
+	@echo "  benchmark    Run performance benchmarks"
 	@echo ""
 	@echo "Server (Phase 2):"
 	@echo "  serve        Run MCP server locally"
@@ -63,6 +64,9 @@ optimize:
 		exit 1; \
 	fi
 	poetry run contextor optimize --src=$(src) --out=$(out) --repo=$(repo) --ref=$(ref) $(if $(topics),--topics=$(topics)) $(if $(metrics),--metrics-output=$(metrics))
+
+benchmark:
+	poetry run contextor benchmark $(if $(budget),--budget=$(budget)) $(if $(output),--output=$(output))
 
 # Server operations (Phase 2)
 serve:

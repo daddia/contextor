@@ -107,7 +107,7 @@ pydantic = "^2.10.0"
 requests = "^2.32.0"
 ```
 
-### For Development Dependencies  
+### For Development Dependencies
 ```toml
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.8.0"

@@ -8,7 +8,7 @@ from .topic_extraction import TopicExtractor
 
 __all__ = [
     "IntelligenceAnalyzer",
-    "TopicExtractor", 
+    "TopicExtractor",
     "CrossLinker",
     "QualityScorer",
     "SimilarityAnalyzer",

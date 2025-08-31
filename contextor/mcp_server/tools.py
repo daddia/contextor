@@ -11,19 +11,19 @@ CONTEXTOR_TOOLS = [
             "properties": {
                 "source_slug": {
                     "type": "string",
-                    "description": "Optional source slug to get detailed listing for (e.g., 'anthropic', 'prompt-engineering')"
+                    "description": "Optional source slug to get detailed listing for (e.g., 'anthropic', 'prompt-engineering')",
                 },
                 "since": {
                     "type": "string",
-                    "description": "Optional ISO timestamp to filter content updated since this date"
+                    "description": "Optional ISO timestamp to filter content updated since this date",
                 },
                 "include_stats": {
                     "type": "boolean",
                     "description": "Whether to include file count and size statistics",
-                    "default": False
-                }
-            }
-        }
+                    "default": False,
+                },
+            },
+        },
     },
     {
         "name": "get_file",
@@ -33,18 +33,15 @@ CONTEXTOR_TOOLS = [
             "properties": {
                 "path": {
                     "type": "string",
-                    "description": "File path relative to sourcedocs/ (e.g., 'anthropic/mcp-connector.md')"
+                    "description": "File path relative to sourcedocs/ (e.g., 'anthropic/mcp-connector.md')",
                 },
                 "slug": {
                     "type": "string",
-                    "description": "Alternative: file slug identifier"
-                }
+                    "description": "Alternative: file slug identifier",
+                },
             },
-            "oneOf": [
-                {"required": ["path"]},
-                {"required": ["slug"]}
-            ]
-        }
+            "oneOf": [{"required": ["path"]}, {"required": ["slug"]}],
+        },
     },
     {
         "name": "search",
@@ -52,29 +49,26 @@ CONTEXTOR_TOOLS = [
         "input_schema": {
             "type": "object",
             "properties": {
-                "query": {
-                    "type": "string",
-                    "description": "Search query string"
-                },
+                "query": {"type": "string", "description": "Search query string"},
                 "source_filter": {
                     "type": "string",
-                    "description": "Optional source slug to limit search scope"
+                    "description": "Optional source slug to limit search scope",
                 },
                 "limit": {
                     "type": "integer",
                     "description": "Maximum number of results to return",
                     "default": 10,
                     "minimum": 1,
-                    "maximum": 50
+                    "maximum": 50,
                 },
                 "include_content": {
                     "type": "boolean",
                     "description": "Whether to include content snippets in results",
-                    "default": True
-                }
+                    "default": True,
+                },
             },
-            "required": ["query"]
-        }
+            "required": ["query"],
+        },
     },
     {
         "name": "stats",
@@ -85,9 +79,9 @@ CONTEXTOR_TOOLS = [
                 "detailed": {
                     "type": "boolean",
                     "description": "Whether to include detailed per-source statistics",
-                    "default": False
+                    "default": False,
                 }
-            }
-        }
-    }
+            },
+        },
+    },
 ]

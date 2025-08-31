@@ -49,7 +49,7 @@ contextor/
 │  ├─ index.md                    # Docs index
 │  ├─ getting-started.md
 │  ├─ model-context-protocol/     # Leading practices for Model Context Protocol (MCP)
-│  ├─ mcp-server/ 
+│  ├─ mcp-server/
 │  └─ architecture/
 │     ├─ decisions/               # ADRs (register.md)
 │     ├─ architecture.md

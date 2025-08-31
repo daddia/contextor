@@ -4,8 +4,6 @@ import tempfile
 from pathlib import Path
 from textwrap import dedent
 
-import yaml
-
 from contextor.loader import DocumentInfo, DocumentLoader
 
 
@@ -66,13 +64,13 @@ class TestDocumentLoader:
         """Test DocumentLoader initialization with project config."""
         # Create a mock project config
         from contextor.project_config import ProjectConfig
-        
+
         config_data = {
             "settings": {
                 "title": "Test Project",
                 "folders": ["custom"],
                 "excludeFolders": ["custom/ignore"],
-                "topics": ["test"]
+                "topics": ["test"],
             }
         }
         project_config = ProjectConfig(config_data)
@@ -248,13 +246,13 @@ class TestDocumentLoader:
         """Test file discovery with project configuration patterns."""
         # Create project config with custom patterns
         from contextor.project_config import ProjectConfig
-        
+
         config_data = {
             "settings": {
                 "title": "Test Project",
                 "folders": ["custom"],
                 "excludeFolders": ["custom/skip"],
-                "topics": ["test"]
+                "topics": ["test"],
             }
         }
         project_config = ProjectConfig(config_data)
@@ -280,7 +278,7 @@ class TestDocumentLoader:
         loader = DocumentLoader(
             self.source_dir, repo="test/repo", ref="main", project_config=None
         )
-        
+
         # Should use defaults
         assert loader.config == {}
         assert loader.include_patterns == ["*.md", "*.mdx", "**/*.md", "**/*.mdx"]

@@ -1,0 +1,272 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v3
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+    - name: Install dependencies
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction --no-root
+
+    - name: Install project
+      run: poetry install --no-interaction
+
+    - name: Run ruff linting
+      run: poetry run ruff check .
+
+    - name: Run ruff formatting check
+      run: poetry run ruff format --check .
+
+    - name: Run mypy type checking
+      run: poetry run mypy contextor/
+
+    - name: Check Poetry configuration
+      run: poetry check
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v3
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+    - name: Install dependencies
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction --no-root
+
+    - name: Install project
+      run: poetry install --no-interaction
+
+    - name: Run tests
+      run: poetry run pytest -v --cov=contextor --cov-report=xml --cov-report=term
+
+    - name: Upload coverage to Codecov
+      if: matrix.python-version == '3.11'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+
+  performance-budget:
+    name: Performance Budget
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Install dependencies
+      run: poetry install --no-interaction
+
+    - name: Run performance benchmarks
+      run: |
+        # Create test data directories of varying sizes
+        mkdir -p test-data/small test-data/medium test-data/large
+
+        # Small dataset (50 files, ~1MB total)
+        for i in {1..50}; do
+          echo "# Test Document $i" > "test-data/small/doc-$i.md"
+          echo "This is test content for document $i." >> "test-data/small/doc-$i.md"
+          for j in {1..20}; do
+            echo "Line $j with some content to make the file larger." >> "test-data/small/doc-$i.md"
+          done
+        done
+
+        # Medium dataset (200 files, ~5MB total)
+        for i in {1..200}; do
+          echo "# Test Document $i" > "test-data/medium/doc-$i.md"
+          echo "This is test content for document $i." >> "test-data/medium/doc-$i.md"
+          for j in {1..50}; do
+            echo "Line $j with some content to make the file larger." >> "test-data/medium/doc-$i.md"
+          done
+        done
+
+        # Large dataset (500 files, ~15MB total)
+        for i in {1..500}; do
+          echo "# Test Document $i" > "test-data/large/doc-$i.md"
+          echo "This is test content for document $i." >> "test-data/large/doc-$i.md"
+          for j in {1..75}; do
+            echo "Line $j with some content to make the file larger." >> "test-data/large/doc-$i.md"
+          done
+        done
+
+    - name: Benchmark small dataset
+      run: |
+        start_time=$(date +%s)
+        poetry run contextor optimize \
+          --src test-data/small \
+          --out output/small \
+          --repo test/repo \
+          --ref main \
+          --metrics-output metrics-small.json \
+          --json-logs
+        end_time=$(date +%s)
+        duration=$((end_time - start_time))
+        echo "Small dataset: ${duration}s" >> benchmark-results.txt
+        echo "SMALL_DURATION=${duration}" >> $GITHUB_ENV
+
+    - name: Benchmark medium dataset
+      run: |
+        start_time=$(date +%s)
+        poetry run contextor optimize \
+          --src test-data/medium \
+          --out output/medium \
+          --repo test/repo \
+          --ref main \
+          --metrics-output metrics-medium.json \
+          --json-logs
+        end_time=$(date +%s)
+        duration=$((end_time - start_time))
+        echo "Medium dataset: ${duration}s" >> benchmark-results.txt
+        echo "MEDIUM_DURATION=${duration}" >> $GITHUB_ENV
+
+    - name: Benchmark large dataset
+      run: |
+        start_time=$(date +%s)
+        poetry run contextor optimize \
+          --src test-data/large \
+          --out output/large \
+          --repo test/repo \
+          --ref main \
+          --metrics-output metrics-large.json \
+          --json-logs
+        end_time=$(date +%s)
+        duration=$((end_time - start_time))
+        echo "Large dataset: ${duration}s" >> benchmark-results.txt
+        echo "LARGE_DURATION=${duration}" >> $GITHUB_ENV
+
+    - name: Check performance budget
+      run: |
+        echo "Performance Budget Check:"
+        echo "========================"
+        cat benchmark-results.txt
+
+        # Budget: ≤10-15 min (600-900s) for large datasets on GH runners
+        BUDGET_SECONDS=900
+
+        if [ "$LARGE_DURATION" -gt "$BUDGET_SECONDS" ]; then
+          echo "❌ PERFORMANCE BUDGET EXCEEDED!"
+          echo "Large dataset took ${LARGE_DURATION}s, budget is ${BUDGET_SECONDS}s"
+          exit 1
+        else
+          echo "✅ Performance budget met: ${LARGE_DURATION}s ≤ ${BUDGET_SECONDS}s"
+        fi
+
+    - name: Upload benchmark results
+      uses: actions/upload-artifact@v4
+      with:
+        name: benchmark-results
+        path: |
+          benchmark-results.txt
+          metrics-*.json
+        retention-days: 30
+
+    - name: Comment benchmark results on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+
+          let comment = '## 📊 Performance Benchmark Results\n\n';
+          comment += '| Dataset | Duration | Files | Status |\n';
+          comment += '|---------|----------|-------|--------|\n';
+
+          const small_duration = process.env.SMALL_DURATION;
+          const medium_duration = process.env.MEDIUM_DURATION;
+          const large_duration = process.env.LARGE_DURATION;
+          const budget = 900; // 15 minutes
+
+          comment += `| Small (50 files) | ${small_duration}s | 50 | ✅ |\n`;
+          comment += `| Medium (200 files) | ${medium_duration}s | 200 | ✅ |\n`;
+
+          const large_status = large_duration <= budget ? '✅' : '❌';
+          comment += `| Large (500 files) | ${large_duration}s | 500 | ${large_status} |\n\n`;
+
+          comment += `**Performance Budget:** ${budget}s (15 minutes)\n`;
+
+          if (large_duration > budget) {
+            comment += '\n⚠️ **Performance budget exceeded!** Consider optimizing for large datasets.\n';
+          } else {
+            comment += '\n✅ **Performance budget met!**\n';
+          }
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });

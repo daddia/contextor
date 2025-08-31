@@ -9,7 +9,7 @@ An Architecture Decision Record (ADR) captures an important architectural decisi
 - The architectural issue or problem
 - The decision taken to address it
 - The status of the decision (proposed, accepted, deprecated, superseded)
-- The context and factors that influenced the decision  
+- The context and factors that influenced the decision
 - The consequences of the decision (positive and negative)
 
 ## ADR Index
@@ -33,7 +33,7 @@ Use the template at [../../templates/adr-template.md](../../templates/adr-templa
 
 - **Proposed** - The decision is proposed and under discussion
 - **Accepted** - The decision is accepted and implemented
-- **Deprecated** - The decision is no longer valid but still exists in legacy systems  
+- **Deprecated** - The decision is no longer valid but still exists in legacy systems
 - **Superseded** - The decision has been replaced by a newer decision
 
 ---

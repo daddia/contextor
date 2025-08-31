@@ -70,7 +70,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.matrix-setup.outputs.matrix) }}
-    
+
     steps:
       - name: Checkout contextor
         uses: actions/checkout@v4
@@ -95,11 +95,11 @@ jobs:
             REPO=$(echo "$REPO_URL" | sed 's|https://github.com/||')
             BRANCH=$(jq -r '.settings.branch' "$CONFIG_FILE")
             FOLDERS=$(jq -r '.settings.folders[]' "$CONFIG_FILE" | head -1)
-            
+
             echo "repo=$REPO" >> $GITHUB_OUTPUT
             echo "branch=$BRANCH" >> $GITHUB_OUTPUT
             echo "src_path=$FOLDERS" >> $GITHUB_OUTPUT
-            
+
             echo "Using project config: ${{ matrix.source_slug }}"
             echo "Repository: $REPO"
             echo "Branch: $BRANCH"
@@ -138,17 +138,17 @@ jobs:
         if: github.event.inputs.force_update != 'true'
         run: |
           cd upstream/${{ matrix.source_slug }}
-          
+
           # Get the latest commit hash from the source
           LATEST_COMMIT=$(git rev-parse HEAD)
           echo "latest_commit=$LATEST_COMMIT" >> $GITHUB_OUTPUT
-          
+
           # Check if we have a previous run record
           PREV_COMMIT_FILE="sourcedocs/${{ matrix.source_slug }}/.contextor-commit"
           if [ -f "$PREV_COMMIT_FILE" ]; then
             PREV_COMMIT=$(cat "$PREV_COMMIT_FILE")
             echo "previous_commit=$PREV_COMMIT" >> $GITHUB_OUTPUT
-            
+
             if [ "$LATEST_COMMIT" = "$PREV_COMMIT" ]; then
               echo "has_changes=false" >> $GITHUB_OUTPUT
               echo "No changes detected in ${{ steps.read-config.outputs.repo }} since $PREV_COMMIT"
@@ -197,28 +197,28 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          
+
           # Create commit message with metrics if available
           COMMIT_MSG="chore(context): refresh ${{ matrix.source_slug }} MDC files"
-          
+
           if [ -f "${{ matrix.source_slug }}/metrics.json" ]; then
             METRICS=$(cat "${{ matrix.source_slug }}/metrics.json")
             PROCESSED=$(echo "$METRICS" | jq -r '.processed // 0')
             WRITTEN=$(echo "$METRICS" | jq -r '.written // 0')
             SKIPPED=$(echo "$METRICS" | jq -r '.skipped // 0')
             ERRORS=$(echo "$METRICS" | jq -r '.errors // 0')
-            
+
             COMMIT_MSG="$COMMIT_MSG
 
           📊 Run metrics:
           - Processed: $PROCESSED files
-          - Written: $WRITTEN files  
+          - Written: $WRITTEN files
           - Skipped: $SKIPPED files
           - Errors: $ERRORS files
-          
+
           Source: ${{ steps.read-config.outputs.repo }}@${{ steps.check-changes.outputs.latest_commit || steps.read-config.outputs.branch }}"
           fi
-          
+
           git commit -m "$COMMIT_MSG"
           git push
 
@@ -247,15 +247,15 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Source | Status | Processed | Written | Skipped | Errors |" >> $GITHUB_STEP_SUMMARY
           echo "|--------|--------|-----------|---------|---------|--------|" >> $GITHUB_STEP_SUMMARY
-          
+
           for metrics_file in metrics/*/metrics.json; do
             if [ -f "$metrics_file" ]; then
               SOURCE=$(basename $(dirname "$metrics_file") | sed 's/^metrics-//')
               PROCESSED=$(jq -r '.processed // 0' "$metrics_file")
-              WRITTEN=$(jq -r '.written // 0' "$metrics_file") 
+              WRITTEN=$(jq -r '.written // 0' "$metrics_file")
               SKIPPED=$(jq -r '.skipped // 0' "$metrics_file")
               ERRORS=$(jq -r '.errors // 0' "$metrics_file")
-              
+
               if [ "$ERRORS" -gt 0 ]; then
                 STATUS="❌ Failed"
               elif [ "$WRITTEN" -gt 0 ]; then
@@ -263,11 +263,11 @@ jobs:
               else
                 STATUS="⏭️ Skipped"
               fi
-              
+
               echo "| $SOURCE | $STATUS | $PROCESSED | $WRITTEN | $SKIPPED | $ERRORS |" >> $GITHUB_STEP_SUMMARY
             fi
           done
-          
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
           if [ "${{ github.event.inputs.force_update }}" = "true" ]; then

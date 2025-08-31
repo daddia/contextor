@@ -35,7 +35,7 @@ function largeFunction() {
   const line28 = 'This is line 28';
   const line29 = 'This is line 29';
   const line30 = 'This is line 30';
-  
+
   return 'completed';
 }
 ```

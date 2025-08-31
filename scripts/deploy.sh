@@ -75,17 +75,17 @@ case $PLATFORM in
   aws)
     echo ""
     echo -e "${YELLOW}Deploying to AWS Lambda...${NC}"
-    
+
     # Check for SAM CLI
     if ! command -v sam &> /dev/null; then
       echo -e "${RED}SAM CLI not found. Please install: pip install aws-sam-cli${NC}"
       exit 1
     fi
-    
+
     # Build the application
     echo "Building Lambda package..."
     sam build --use-container
-    
+
     # Deploy based on environment
     if [ "$ENVIRONMENT" = "prod" ]; then
       echo "Deploying to production..."
@@ -104,7 +104,7 @@ case $PLATFORM in
         --parameter-overrides "Environment=dev" \
         --guided
     fi
-    
+
     # Output endpoint
     echo ""
     echo -e "${GREEN}Deployment complete!${NC}"
@@ -115,20 +115,20 @@ case $PLATFORM in
       --query 'Stacks[0].Outputs[?OutputKey==`ApiEndpoint`].OutputValue' \
       --output text
     ;;
-    
+
   vercel)
     echo ""
     echo -e "${YELLOW}Deploying to Vercel...${NC}"
-    
+
     # Check for Vercel CLI
     if ! command -v vercel &> /dev/null; then
       echo -e "${RED}Vercel CLI not found. Please install: npm i -g vercel${NC}"
       exit 1
     fi
-    
+
     # Create api directory if it doesn't exist
     mkdir -p api
-    
+
     # Deploy based on environment
     if [ "$ENVIRONMENT" = "prod" ]; then
       echo "Deploying to production..."
@@ -137,11 +137,11 @@ case $PLATFORM in
       echo "Deploying to development..."
       vercel
     fi
-    
+
     echo ""
     echo -e "${GREEN}Deployment complete!${NC}"
     ;;
-    
+
   *)
     echo -e "${RED}Invalid platform: $PLATFORM${NC}"
     echo "Supported platforms: aws, vercel"
@@ -163,7 +163,7 @@ if [ "$PLATFORM" = "aws" ]; then
     --region $REGION \
     --query 'Stacks[0].Outputs[?OutputKey==`ApiEndpoint`].OutputValue' \
     --output text)
-  
+
   curl -s "${ENDPOINT}health" | jq .
 elif [ "$PLATFORM" = "vercel" ]; then
   # Get the deployment URL from Vercel

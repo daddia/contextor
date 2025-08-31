@@ -39,7 +39,7 @@ content:
         System prompts are instructions that guide the AI's behavior throughout
         the entire conversation. They set the context, tone, and constraints for
         how the AI should respond.
-      
+
     - heading: "Best Practices"
       level: 2
       content: |
@@ -56,7 +56,7 @@ context:
   topics: ["prompt-engineering", "system-prompts", "AI-guidance", "claude"]
   content_type: "documentation"
   language: "en"
-  related_pages: 
+  related_pages:
     - "anthropic-docs/pages/be-clear-and-direct.mdc"
     - "anthropic-docs/pages/prompt-engineering-overview.mdc"
   last_modified: "2025-01-14T15:20:00Z"
@@ -104,7 +104,7 @@ MCP files are organized in the `{source-slug}/` directory:
       "last_updated": "2025-01-15T10:30:00Z"
     },
     {
-      "slug": "openai-docs", 
+      "slug": "openai-docs",
       "name": "OpenAI Platform Documentation",
       "base_url": "https://platform.openai.com",
       "pages_count": 15,
@@ -121,7 +121,7 @@ MCP files are organized in the `{source-slug}/` directory:
 ```json
 {
   "site_slug": "anthropic-docs",
-  "site_name": "Anthropic Documentation", 
+  "site_name": "Anthropic Documentation",
   "base_url": "https://docs.anthropic.com",
   "mcp_version": "1.0",
   "generated_at": "2025-01-15T10:30:00Z",
@@ -156,25 +156,25 @@ from typing import List, Dict, Any
 class MCPReader:
     def __init__(self, context_dir: str = "{source-slug}"):
         self.context_dir = Path(context_dir)
-    
+
     def load_manifest(self) -> Dict[str, Any]:
         """Load the global manifest"""
         manifest_path = self.context_dir / "manifest.json"
         with open(manifest_path) as f:
             return json.load(f)
-    
+
     def load_site_manifest(self, site_slug: str) -> Dict[str, Any]:
         """Load manifest for a specific site"""
         manifest_path = self.context_dir / site_slug / "manifest.json"
         with open(manifest_path) as f:
             return json.load(f)
-    
+
     def load_mcp_file(self, site_slug: str, page_slug: str) -> Dict[str, Any]:
         """Load a specific MCP file"""
         mcp_path = self.context_dir / site_slug / "pages" / f"{page_slug}.mdc"
         with open(mcp_path) as f:
             return yaml.safe_load(f)
-    
+
     def find_pages_by_topic(self, topic: str) -> List[Dict[str, Any]]:
         """Find all pages containing a specific topic"""
         pages = []
@@ -186,7 +186,7 @@ class MCPReader:
                         mcp_data = self.load_mcp_file(site_dir.name, page["slug"])
                         pages.append(mcp_data)
         return pages
-    
+
     def get_all_topics(self) -> List[str]:
         """Get all unique topics across all sites"""
         topics = set()
@@ -213,7 +213,7 @@ for page in pe_pages:
 # Find pages by topic
 contextor search --topic "prompt-engineering" --context-dir {source-slug}
 
-# List all available topics  
+# List all available topics
 contextor topics --context-dir {source-slug}
 
 # Export to different formats
@@ -234,20 +234,20 @@ class MCPVectorStore:
         self.reader = MCPReader(context_dir)
         self.client = chromadb.Client()
         self.collection = self.client.create_collection("mcp_docs")
-    
+
     def index_all_content(self):
         """Index all MCP content in vector database"""
         manifest = self.reader.load_manifest()
-        
+
         for site in manifest["sites"]:
             site_manifest = self.reader.load_site_manifest(site["slug"])
-            
+
             for page in site_manifest["pages"]:
                 mcp_data = self.reader.load_mcp_file(site["slug"], page["slug"])
-                
+
                 # Extract text content
                 content_text = self._extract_text_content(mcp_data)
-                
+
                 # Add to vector store
                 self.collection.add(
                     documents=[content_text],
@@ -259,7 +259,7 @@ class MCPVectorStore:
                     }],
                     ids=[f"{site['slug']}-{page['slug']}"]
                 )
-    
+
     def search_similar(self, query: str, n_results: int = 5) -> List[Dict]:
         """Search for similar content"""
         results = self.collection.query(
@@ -278,28 +278,28 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 class MCPLangChainLoader:
     def __init__(self, context_dir: str = "{source-slug}"):
         self.reader = MCPReader(context_dir)
-    
+
     def load_documents(self, site_slug: str = None, topic: str = None) -> List[Document]:
         """Load MCP files as LangChain Documents"""
         documents = []
-        
+
         if topic:
             pages = self.reader.find_pages_by_topic(topic)
         else:
             # Load all pages from a site or all sites
             manifest = self.reader.load_manifest()
             pages = []
-            
+
             sites_to_process = [site_slug] if site_slug else [s["slug"] for s in manifest["sites"]]
-            
+
             for site in sites_to_process:
                 site_manifest = self.reader.load_site_manifest(site)
                 for page in site_manifest["pages"]:
                     pages.append(self.reader.load_mcp_file(site, page["slug"]))
-        
+
         for mcp_data in pages:
             content = self._extract_text_content(mcp_data)
-            
+
             doc = Document(
                 page_content=content,
                 metadata={
@@ -311,7 +311,7 @@ class MCPLangChainLoader:
                 }
             )
             documents.append(doc)
-        
+
         return documents
 ```
 

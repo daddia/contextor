@@ -43,35 +43,35 @@ Resources:
           Properties:
             Path: /mcp/tools
             Method: GET
-        
+
         ExecuteTool:
           Type: Api
           Properties:
             Path: /mcp/tools/{tool}
             Method: POST
-        
+
         ListResources:
           Type: Api
           Properties:
             Path: /mcp/resources
             Method: GET
-        
+
         BatchExecute:
           Type: Api
           Properties:
             Path: /mcp/batch
             Method: POST
-        
+
         HealthCheck:
           Type: Api
           Properties:
             Path: /health
             Method: GET
-      
+
       # Lambda Layers for dependencies
       Layers:
         - !Ref DependenciesLayer
-      
+
       # Permissions
       Policies:
         - S3CrudPolicy:
@@ -153,15 +153,15 @@ Outputs:
   ApiEndpoint:
     Description: API Gateway endpoint URL
     Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
-  
+
   FunctionArn:
     Description: Lambda Function ARN
     Value: !GetAtt ContextorMCPFunction.Arn
-  
+
   StorageBucketName:
     Description: S3 Storage Bucket Name
     Value: !Ref StorageBucket
-  
+
   ApiKeyId:
     Description: API Key ID
     Value: !Ref ApiKey

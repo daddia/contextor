@@ -66,16 +66,15 @@ httpx = "^0.25.0"  # Required for FastAPI TestClient
 [tool.poetry.group.serverless.dependencies]
 # AWS Lambda dependencies
 boto3 = "^1.34.0"
-awslambdaric = "^2.0.7"
 
 [tool.poetry.group.vercel.dependencies]
 # Vercel Edge Functions dependencies
 
 [tool.poetry.extras]
-aws = ["boto3", "awslambdaric"]
+aws = ["boto3"]
 vercel = []
 intelligence = ["spacy", "scikit-learn", "nltk"]
-all = ["boto3", "awslambdaric", "spacy", "scikit-learn", "nltk"]
+all = ["boto3", "spacy", "scikit-learn", "nltk"]
 
 [tool.poetry.scripts]
 contextor = "contextor.__main__:main"

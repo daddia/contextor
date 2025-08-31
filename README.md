@@ -1,8 +1,10 @@
 # Contextor
 
-Contextor converts existing documentation trees (e.g. Next.js, Tailwind CSS) into **Model Context Protocol** (`.mdc`) files optimised for LLMs. 
+Contextor converts existing documentation trees (e.g. Next.js, Tailwind CSS) into **Model Context Protocol** (`.mdc`) files optimised for LLMs.
 
-In **Phase 1**, it walks a target docs directory from another repo, cleans and normalises Markdown/MDX, performs optional token-saving compression, and writes results to a separate repository named **`sourcedocs`** under `{source-slug}/`. **Phase 2** adds a Python MCP server to serve from `sourcedocs`. **Phase 3** (future) may add polite web scraping for docs that aren’t hosted in public repos.
+In **Phase 1**, it walks a target docs directory from another repo, cleans and normalises Markdown/MDX, performs optional token-saving compression, and writes results to a separate repository named **`sourcedocs`** under `{source-slug}/`.
+
+**Phase 2** adds a Python MCP server to serve from `sourcedocs`. **Phase 3** (future) may add polite web scraping for docs that aren’t hosted in public repos.
 
 ## Key Features
 

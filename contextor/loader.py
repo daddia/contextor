@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import fnmatch
-import glob
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
@@ -43,7 +42,7 @@ class DocumentLoader:
         self.repo = repo
         self.ref = ref
         self.project_config = project_config
-        
+
         # Use project config or defaults
         if project_config:
             self.config = project_config.to_legacy_format()
@@ -67,8 +66,6 @@ class DocumentLoader:
                 "build/**/*",
             ],
         )
-
-
 
     def _should_include_file(self, file_path: Path) -> bool:
         """Check if a file should be included based on patterns."""

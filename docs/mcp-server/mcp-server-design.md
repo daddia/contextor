@@ -18,7 +18,7 @@ graph LR
     B --> C[Optimized MCP]
     C --> D[MCP Server]
     D --> E[Agent Engineers]
-    
+
     B --> F[_raw/ Storage]
     C --> G[{source-slug}/ Storage]
 ```
@@ -74,10 +74,10 @@ class ContextorMCPServer:
     def __init__(self):
         self.server = Server("contextor")
         self.setup_tools()
-        
+
     def setup_tools(self):
         """Register available MCP tools"""
-        
+
         # Content fetching tools
         self.server.add_tool(Tool(
             name="fetch_page",
@@ -92,7 +92,7 @@ class ContextorMCPServer:
                 "required": ["url"]
             }
         ))
-        
+
         self.server.add_tool(Tool(
             name="search{source-slug}",
             description="Search existing context for relevant content",
@@ -106,7 +106,7 @@ class ContextorMCPServer:
                 "required": ["query"]
             }
         ))
-        
+
         self.server.add_tool(Tool(
             name="get_mcp_file",
             description="Retrieve an optimized MCP file",
@@ -119,7 +119,7 @@ class ContextorMCPServer:
                 "required": ["site", "page"]
             }
         ))
-        
+
         self.server.add_tool(Tool(
             name="list_sites",
             description="List available sites and their pages",
@@ -130,7 +130,7 @@ class ContextorMCPServer:
                 }
             }
         ))
-        
+
         self.server.add_tool(Tool(
             name="refresh_content",
             description="Re-fetch and update content for a site",
@@ -160,47 +160,47 @@ class ContextorHandlers:
         self.base_path = base_path
         self.raw_dir = base_path / "_raw"
         self.context_dir = base_path / "{source-slug}"
-        
+
     async def fetch_page(self, url: str, selectors: Dict = None, cache: bool = True) -> Dict[str, Any]:
         """Fetch a web page and convert to markdown"""
-        
+
         # Check cache first
         if cache:
             cached = self._check_cache(url)
             if cached:
                 return {"status": "cached", "content": cached}
-        
+
         # Fetch and process
         html_content = await scraper.fetch_url(url)
         markdown = markdown_converter.html_to_markdown(html_content, selectors)
-        
+
         # Store raw markdown
         site_slug = self._extract_site_slug(url)
         page_slug = self._extract_page_slug(url)
         date_dir = datetime.now().strftime("%Y-%m-%d")
-        
+
         raw_path = self.raw_dir / site_slug / date_dir / f"{page_slug}.md"
         raw_path.parent.mkdir(parents=True, exist_ok=True)
         raw_path.write_text(markdown)
-        
+
         # Generate optimized MCP
         mcp_content = mcp_optimizer.optimize_for{source-slug}(markdown, url)
         mcp_path = self.context_dir / site_slug / "pages" / f"{page_slug}.mdc"
         mcp_path.parent.mkdir(parents=True, exist_ok=True)
         mcp_path.write_text(mcp_content)
-        
+
         return {
             "status": "success",
             "raw_path": str(raw_path),
             "mcp_path": str(mcp_path),
             "content": markdown[:1000] + "..." if len(markdown) > 1000 else markdown
         }
-    
+
     async def search{source-slug}(self, query: str, site_filter: str = None, limit: int = 10) -> List[Dict]:
         """Search through existing context files"""
         results = []
         search_dir = self.context_dir / site_filter if site_filter else self.context_dir
-        
+
         for mcp_file in search_dir.rglob("*.mdc"):
             content = mcp_file.read_text()
             if query.lower() in content.lower():
@@ -211,7 +211,7 @@ class ContextorHandlers:
                     "score": score,
                     "preview": self._extract_preview(content, query)
                 })
-        
+
         # Sort by relevance and limit
         results.sort(key=lambda x: x["score"], reverse=True)
         return results[:limit]
@@ -225,27 +225,27 @@ class ContextorHandlers:
 # contextor/core/storage.py
 class RawMarkdownStorage:
     """Manages raw markdown storage with versioning"""
-    
+
     def __init__(self, base_dir: Path):
         self.base_dir = base_dir
-        
+
     def store_raw(self, content: str, site: str, page: str) -> Path:
         """Store raw markdown with date versioning"""
         date = datetime.now().strftime("%Y-%m-%d")
         path = self.base_dir / site / date / f"{page}.md"
-        
+
         # Create directory structure
         path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         # Write content
         path.write_text(content)
-        
+
         # Update latest symlink
         latest_dir = self.base_dir / site / "latest"
         if latest_dir.exists():
             latest_dir.unlink()
         latest_dir.symlink_to(path.parent)
-        
+
         # Store metadata
         metadata = {
             "url": f"https://{site}/{page}",
@@ -254,10 +254,10 @@ class RawMarkdownStorage:
             "word_count": len(content.split()),
             "char_count": len(content)
         }
-        
+
         metadata_path = path.parent / "metadata.json"
         metadata_path.write_text(json.dumps(metadata, indent=2))
-        
+
         return path
 ```
 
@@ -269,13 +269,13 @@ class RawMarkdownStorage:
 # contextor/core/mcp_optimizer.py
 class MCPOptimizer:
     """Optimizes raw markdown for MCP consumption"""
-    
+
     def optimize_for{source-slug}(self, markdown: str, source_url: str) -> str:
         """Convert raw markdown to optimized MCP format"""
-        
+
         # Parse markdown structure
         sections = self._parse_sections(markdown)
-        
+
         # Optimize content
         optimized = {
             "mcp_version": "1.0",
@@ -286,31 +286,31 @@ class MCPOptimizer:
             "content": self._optimize_content(sections),
             "context": self._extract{source-slug}(sections)
         }
-        
+
         return yaml.dump(optimized, default_flow_style=False)
-    
+
     def _optimize_content(self, sections: List[Dict]) -> Dict:
         """Optimize content for LLM consumption"""
-        
+
         # Remove redundant content
         sections = self._remove_navigation(sections)
         sections = self._deduplicate_content(sections)
-        
+
         # Enhance structure
         sections = self._add_section_summaries(sections)
         sections = self._extract_key_points(sections)
-        
+
         # Compress verbose content
         sections = self._compress_examples(sections)
-        
+
         return {
             "sections": sections,
             "summary": self._generate_summary(sections)
         }
-    
+
     def _extract{source-slug}(self, sections: List[Dict]) -> Dict:
         """Extract contextual metadata"""
-        
+
         return {
             "topics": self._extract_topics(sections),
             "code_languages": self._detect_languages(sections),
@@ -333,10 +333,10 @@ server = ContextorMCPServer()
 
 def lambda_handler(event, context):
     """AWS Lambda handler for MCP requests"""
-    
+
     # Parse request
     body = json.loads(event.get('body', '{}'))
-    
+
     # Handle MCP protocol
     if event['path'] == '/mcp/sse':
         # Server-Sent Events for streaming
@@ -348,18 +348,18 @@ def lambda_handler(event, context):
             },
             'body': server.handle_sse(body)
         }
-    
+
     # Handle tool invocations
     elif event['path'].startswith('/mcp/tools/'):
         tool_name = event['path'].split('/')[-1]
         result = server.invoke_tool(tool_name, body)
-        
+
         return {
             'statusCode': 200,
             'headers': {'Content-Type': 'application/json'},
             'body': json.dumps(result)
         }
-    
+
     return {
         'statusCode': 404,
         'body': json.dumps({'error': 'Not found'})
@@ -381,10 +381,10 @@ class handler(BaseHTTPRequestHandler):
         content_length = int(self.headers['Content-Length'])
         post_data = self.rfile.read(content_length)
         body = json.loads(post_data)
-        
+
         if self.path == '/api/mcp':
             result = server.handle_request(body)
-            
+
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
@@ -422,7 +422,7 @@ Resources:
       Environment:
         Variables:
           STORAGE_BUCKET: !Ref StorageBucket
-          
+
   StorageBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -549,7 +549,7 @@ class MCPMonitor:
     def track_request(self, tool: str, duration: float):
         statsd.histogram(f'contextor.mcp.{tool}.duration', duration)
         statsd.increment(f'contextor.mcp.{tool}.count')
-    
+
     def track_error(self, tool: str, error: str):
         logging.error(f"MCP tool {tool} failed: {error}")
         statsd.increment(f'contextor.mcp.{tool}.errors')

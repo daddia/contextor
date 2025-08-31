@@ -1,30 +1,50 @@
-# Getting Started with Contextor
+---
+title: "Getting Started with Contextor"
+canonical_id: "DOC-GS-001"
+version: "1.0.0"
+updated: "2025-01-12"
+owner: "Contextor Team"
+status: "approved"
+tags: ["getting-started", "tutorial", "setup"]
+source_url: "https://github.com/daddia/contextor/docs/getting-started.md"
+---
 
-This guide will help you set up and use Contextor to fetch web content and generate MCP files for your project.
+# Getting Started with Contextor [ID: DOC-GS-001]
+
+Contextor converts existing documentation directories from repositories into **Model Context Protocol** (`.mdc`) files optimized for LLMs. This guide will help you set up and use Contextor to process documentation directories and generate optimized MCP files for your project.
+
+## Summary
+
+- Install Contextor using Poetry for dependency management
+- Process local documentation directories with the `optimize` command
+- Generate `.mdc` files with rich metadata and content optimization
+- Use project configurations for popular frameworks like Next.js and React
+- Deploy MCP server for agent integration (Phase 2)
+- Leverage intelligence analysis for content insights
 
 ## Installation
 
 ### Prerequisites
 
 - Python 3.11 or higher
+- Poetry for dependency management
 - Git
 
 ### Install Contextor
 
 ```bash
 # Clone the repository
-git clone https://github.com/<your-org>/contextor.git
+git clone https://github.com/daddia/contextor.git
 cd contextor
 
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+# Install dependencies using Poetry
+poetry install
 
-# Install dependencies
-pip install -r requirements.txt
+# Optional: Install intelligence analysis features
+poetry install --extras intelligence
 
-# Optional: Install Playwright for dynamic content
-python -m playwright install
+# Optional: Install serverless deployment features
+poetry install --extras aws
 ```
 
 ### Install as a Package
@@ -34,259 +54,235 @@ python -m playwright install
 pip install contextor
 
 # Or install from source
-pip install git+https://github.com/<your-org>/contextor.git
+pip install git+https://github.com/daddia/contextor.git
 ```
 
 ## Quick Start
 
-### 1. Create Configuration
+### 1. Prepare Your Documentation
 
-Create a `config/targets.yaml` file to specify what content to fetch:
-
-```yaml
-# config/targets.yaml
-version: "1.0"
-output_dir: "{source-slug}"
-
-sites:
-  - slug: anthropic-docs
-    name: "Anthropic Documentation"
-    base_url: https://docs.anthropic.com
-    robots_txt: true
-    rate_limit:
-      requests_per_second: 2
-      concurrent: 3
-    extractor: requests
-    selector: "main article"
-    pages:
-      - path: /en/docs/build-with-claude/prompt-engineering/system-prompts
-      - path: /en/docs/build-with-claude/prompt-engineering/be-clear-and-direct
-      - path: /en/docs/build-with-claude/prompt-engineering/overview
-```
-
-### 2. Run Contextor
+Contextor works with local documentation directories from repositories. First, clone the documentation you want to process:
 
 ```bash
-# Fetch content and generate MCP files
-contextor fetch --config config/targets.yaml
+# Example: Clone Next.js documentation
+git clone https://github.com/vercel/next.js.git ../vendor/nextjs
+cd ../vendor/nextjs
+git checkout main  # or specific branch/commit
 
-# Check the output
-ls -la {source-slug}/
-ls -la {source-slug}/anthropic-docs/pages/
+# Create output directory
+mkdir -p ../sourcedocs
+```
+
+### 2. Process Documentation
+
+Use the `optimize` command to convert documentation to `.mdc` files:
+
+```bash
+# Basic usage
+poetry run contextor optimize \
+  --src ../vendor/nextjs/docs \
+  --out ../sourcedocs/nextjs \
+  --repo vercel/next.js \
+  --ref main
+
+# Using project configuration (recommended)
+poetry run contextor optimize \
+  --src ../vendor/nextjs/docs \
+  --out ../sourcedocs/nextjs \
+  --project-config nextjs
 ```
 
 ### 3. Explore the Results
 
-Your `{source-slug}/` directory now contains:
+Your `../sourcedocs/nextjs/` directory now contains:
 
-```
-{source-slug}/
-├── manifest.json                    # Global manifest
-└── anthropic-docs/
-    ├── manifest.json               # Site-specific manifest
-    ├── index.json                  # Page index
-    └── pages/
-        ├── system-prompts.mdc      # MCP files
-        ├── be-clear-and-direct.mdc
-        └── overview.mdc
+```text
+sourcedocs/nextjs/
+├── pages/
+│   ├── getting-started.mdc      # Optimized MCP files
+│   ├── routing.mdc
+│   └── api-reference.mdc
+├── index.jsonl                  # Document index
+└── metrics.json                 # Processing metrics
 ```
 
 ### 4. Use in Your Project
 
 ```python
-import yaml
+import json
 from pathlib import Path
 
-# Load all MCP files
-context_dir = Path("{source-slug}")
-for mcp_file in context_dir.rglob("*.mdc"):
-    with open(mcp_file) as f:
-        mcp_data = yaml.safe_load(f)
-        print(f"Title: {mcp_data['content']['title']}")
-        print(f"URL: {mcp_data['source']['url']}")
-        print(f"Topics: {mcp_data['context']['topics']}")
-```
-
-## Configuration Reference
-
-### Basic Site Configuration
-
-```yaml
-sites:
-  - slug: my-site                    # Unique identifier
-    name: "My Documentation Site"    # Human-readable name
-    base_url: https://example.com    # Base URL for the site
-    robots_txt: true                 # Respect robots.txt (recommended)
-    
-    # Rate limiting (be polite!)
-    rate_limit:
-      requests_per_second: 2         # Max requests per second
-      concurrent: 3                  # Max concurrent requests
-    
-    # Content extraction
-    extractor: requests              # Use 'playwright' for JS-heavy sites
-    selector: "main, article"        # CSS selector for main content
-    title_selector: "h1"             # CSS selector for page title
-    
-    # Pages to fetch (choose one approach)
-    pages:
-      - path: /docs/page1
-      - path: /docs/page2
-        title_selector: ".custom-title"  # Override for specific page
-    
-    # OR: Use sitemap discovery
-    sitemap: true
-    filters:
-      include_patterns:
-        - "*/docs/*"
-        - "*/guide/*"
-      exclude_patterns:
-        - "*/api/*"
-        - "*/changelog/*"
-```
-
-### Advanced Configuration
-
-```yaml
-sites:
-  - slug: complex-site
-    name: "Complex Site Example"
-    base_url: https://complex-site.com
-    
-    # Use Playwright for JavaScript-heavy sites
-    extractor: playwright
-    playwright_options:
-      headless: true
-      timeout: 30000
-      wait_for: "networkidle"
-    
-    # Content cleaning
-    selector: ".docs-content"
-    remove_selectors:
-      - ".navigation"
-      - ".sidebar"
-      - ".advertisement"
-      - "[class*='cookie']"
-    
-    # Custom headers
-    headers:
-      User-Agent: "Contextor/1.0 (+https://github.com/your-org/contextor)"
-      Accept: "text/html,application/xhtml+xml"
-    
-    # Transform rules
-    transforms:
-      - type: "remove_empty_headings"
-      - type: "normalize_whitespace"
-      - type: "fix_relative_links"
-        base_url: "https://complex-site.com"
+# Load MCP files
+sourcedocs_dir = Path("../sourcedocs/nextjs/pages")
+for mdc_file in sourcedocs_dir.glob("*.mdc"):
+    with open(mdc_file) as f:
+        mdc_data = json.load(f)
+        print(f"Title: {mdc_data['content']['title']}")
+        print(f"Source: {mdc_data['source']['canonical_url']}")
+        print(f"Topics: {mdc_data['metadata']['topics']}")
 ```
 
 ## CLI Commands
 
-### Fetch Content
+### Core Commands
+
+#### optimize
+Convert a documentation directory to `.mdc` files:
 
 ```bash
-# Basic fetch
-contextor fetch --config config/targets.yaml
+# Required parameters
+contextor optimize \
+  --src /path/to/docs \
+  --out /path/to/output \
+  --repo owner/repository \
+  --ref branch-or-commit
 
-# Fetch specific sites only
-contextor fetch --sites anthropic-docs,openai-docs
+# With project configuration
+contextor optimize \
+  --src /path/to/docs \
+  --out /path/to/output \
+  --project-config nextjs
 
-# Dry run (show what would be fetched)
-contextor fetch --dry-run --config config/targets.yaml
-
-# Verbose output
-contextor fetch --verbose --config config/targets.yaml
+# Additional options
+contextor optimize \
+  --src /path/to/docs \
+  --out /path/to/output \
+  --repo owner/repository \
+  --ref main \
+  --topics "framework,javascript" \
+  --profile balanced \
+  --metrics-output metrics.json
 ```
 
-### Validate and Inspect
+#### list-projects
+List available project configurations:
 
 ```bash
-# Validate generated MCP files
-contextor validate --context-dir {source-slug}
-
-# Show site information
-contextor info --site anthropic-docs
-
-# List all topics
-contextor topics --context-dir {source-slug}
-
-# Search for content
-contextor search --topic "prompt-engineering" --context-dir {source-slug}
+contextor list-projects
 ```
 
-### Export and Convert
+#### intelligence
+Run intelligence analysis on processed `.mdc` files:
 
 ```bash
-# Export to different formats
-contextor export --format json --output docs.json
-contextor export --format markdown --output docs.md --site anthropic-docs
-
-# Generate fresh manifests
-contextor manifest --context-dir {source-slug}
+contextor intelligence \
+  --source-dir /path/to/mdc/files \
+  --features topic-extraction,cross-linking,quality-scoring \
+  --metrics-output intelligence-metrics.json
 ```
 
-## Common Patterns
+### Optimization Profiles
 
-### Multiple Sites
+- **`lossless`**: Preserve all content with minimal changes
+- **`balanced`**: Optimize for readability while preserving meaning (default)
+- **`compact`**: Aggressive optimization for token efficiency
 
-```yaml
-sites:
-  - slug: anthropic-docs
-    name: "Anthropic Documentation"
-    base_url: https://docs.anthropic.com
-    # ... configuration
-    
-  - slug: openai-docs
-    name: "OpenAI Documentation"
-    base_url: https://platform.openai.com
-    # ... configuration
-    
-  - slug: mcp-spec
-    name: "MCP Specification"
-    base_url: https://spec.modelcontextprotocol.io
-    # ... configuration
+### Project Configurations
+
+Contextor includes built-in configurations for popular projects:
+
+- `nextjs` - Next.js React framework
+- `react` - React library
+- `tailwindcss` - Tailwind CSS framework
+- `vite` - Vite build tool
+- `vscode` - Visual Studio Code
+
+## Directory-Based Workflow
+
+### Phase 1: Local Processing
+
+Contextor's Phase 1 focuses on **directory-first ingestion** with no network calls during optimization:
+
+1. **Source Preparation**: Clone the target repository locally
+2. **Directory Processing**: Point Contextor at the documentation directory
+3. **Content Transformation**: Apply normalization and optimization transforms
+4. **MCP Generation**: Output `.mdc` files with rich metadata
+5. **Indexing**: Generate searchable index files
+
+### Phase 2: MCP Server (Optional)
+
+Deploy a read-only MCP server to serve your processed content:
+
+```bash
+# Start MCP server locally
+poetry run contextor-server --transport=stdio
+
+# Or with HTTP transport
+poetry run contextor-server --transport=sse --host=0.0.0.0 --port=8080
 ```
 
-### Site-Specific Extractors
+## Project Configuration
 
-```yaml
-# config/extractors.yaml
-extractors:
-  default:
-    content_selector: "main, article, .content"
-    title_selector: "h1, title"
-    remove_selectors:
-      - ".navigation"
-      - ".sidebar"
-      - ".footer"
-    
-  anthropic-docs:
-    content_selector: "main article"
-    title_selector: "h1.page-title"
-    remove_selectors:
-      - ".docs-nav"
-      - ".page-footer"
-      - ".edit-page"
+### Using Built-in Configurations
+
+```bash
+# List available configurations
+contextor list-projects
+
+# Use a specific configuration
+contextor optimize \
+  --src /path/to/docs \
+  --out /path/to/output \
+  --project-config nextjs
 ```
 
-### Sitemap Discovery
+### Automatic Configuration Detection
 
-```yaml
-sites:
-  - slug: auto-discovery
-    name: "Auto Discovery Example"
-    base_url: https://example.com
-    sitemap: true                    # Use sitemap.xml for page discovery
-    filters:
-      include_patterns:
-        - "*/docs/*"                 # Only fetch documentation pages
-        - "*/guides/*"
-      exclude_patterns:
-        - "*/api/*"                  # Skip API reference
-        - "*/blog/*"                 # Skip blog posts
-      max_pages: 100                 # Limit total pages
+Contextor automatically detects standards-based configuration files:
+
+```bash
+# Auto-detection enabled by default
+contextor optimize \
+  --src /path/to/docs \
+  --out /path/to/output
+
+# Disable auto-detection
+contextor optimize \
+  --src /path/to/docs \
+  --out /path/to/output \
+  --no-auto-detect-config
 ```
+
+### Custom Configuration
+
+Create a custom project configuration in `config/projects/myproject.json`:
+
+```json
+{
+  "settings": {
+    "title": "My Project",
+    "project": "/owner/repository",
+    "docsRepoUrl": "https://github.com/owner/repository",
+    "folders": ["docs", "guides"],
+    "excludeFolders": ["archive", "legacy"],
+    "branch": "main",
+    "description": "Custom project description",
+    "topics": ["custom", "documentation"],
+    "profile": "balanced"
+  }
+}
+```
+
+## Intelligence Analysis
+
+### Enable Advanced Features
+
+```bash
+# Install intelligence dependencies
+poetry install --extras intelligence
+
+# Run analysis with all features
+contextor intelligence \
+  --source-dir /path/to/mdc/files \
+  --features topic-extraction,cross-linking,quality-scoring,duplicate-detection
+```
+
+### Analysis Features
+
+- **Topic Extraction**: Automatically identify document topics
+- **Cross-Linking**: Find relationships between documents
+- **Quality Scoring**: Assess content completeness and clarity
+- **Duplicate Detection**: Identify similar or duplicate content
 
 ## Integration Examples
 
@@ -305,25 +301,36 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+
       - name: Install Contextor
-        run: pip install contextor
-      
-      - name: Fetch Content
-        run: contextor fetch --config config/targets.yaml
-      
-      - name: Validate MCP Files
-        run: contextor validate --context-dir {source-slug}
-      
+        run: poetry install
+
+      - name: Process Documentation
+        run: |
+          poetry run contextor optimize \
+            --src ../vendor/nextjs/docs \
+            --out ../sourcedocs/nextjs \
+            --project-config nextjs \
+            --metrics-output metrics.json
+
+      - name: Run Intelligence Analysis
+        run: |
+          poetry run contextor intelligence \
+            --source-dir ../sourcedocs/nextjs \
+            --features topic-extraction,cross-linking,quality-scoring
+
       - name: Commit Changes
         run: |
           git config --local user.name "GitHub Actions"
           git config --local user.email "action@github.com"
-          git add {source-slug}/
+          git add ../sourcedocs/
           git commit -m "Update context: $(date -I)" || exit 0
           git push
 ```
@@ -334,51 +341,60 @@ jobs:
 # your_project/context_manager.py
 import subprocess
 from pathlib import Path
-import yaml
+import json
 
 class ContextManager:
-    def __init__(self, context_dir="{source-slug}", config_file="config/targets.yaml"):
-        self.context_dir = Path(context_dir)
-        self.config_file = config_file
-    
-    def update{source-slug}(self):
-        """Fetch latest content using contextor"""
-        subprocess.run([
-            "contextor", "fetch", 
-            "--config", self.config_file
-        ], check=True)
-    
-    def load_pages_by_topic(self, topic: str):
-        """Load all pages containing a specific topic"""
-        pages = []
-        for mcp_file in self.context_dir.rglob("*.mdc"):
-            with open(mcp_file) as f:
-                mcp_data = yaml.safe_load(f)
-                if topic in mcp_data.get("context", {}).get("topics", []):
-                    pages.append(mcp_data)
-        return pages
-    
-    def get_latest_content(self, site_slug: str):
-        """Get all content from a specific site"""
-        site_dir = self.context_dir / site_slug / "pages"
-        content = []
-        
-        if site_dir.exists():
-            for mcp_file in site_dir.glob("*.mdc"):
-                with open(mcp_file) as f:
-                    content.append(yaml.safe_load(f))
-        
-        return content
+    def __init__(self, sourcedocs_dir="../sourcedocs", project_config="nextjs"):
+        self.sourcedocs_dir = Path(sourcedocs_dir)
+        self.project_config = project_config
 
-# Usage in your application
+    def update_documentation(self, src_dir: str, output_dir: str):
+        """Process documentation using contextor"""
+        subprocess.run([
+            "poetry", "run", "contextor", "optimize",
+            "--src", src_dir,
+            "--out", output_dir,
+            "--project-config", self.project_config
+        ], check=True)
+
+    def load_documents_by_topic(self, topic: str, source_slug: str):
+        """Load all documents containing a specific topic"""
+        documents = []
+        pages_dir = self.sourcedocs_dir / source_slug / "pages"
+
+        if pages_dir.exists():
+            for mdc_file in pages_dir.glob("*.mdc"):
+                with open(mdc_file) as f:
+                    mdc_data = json.load(f)
+                    if topic in mdc_data.get("metadata", {}).get("topics", []):
+                        documents.append(mdc_data)
+
+        return documents
+
+    def get_intelligence_results(self, source_slug: str):
+        """Get intelligence analysis results"""
+        intelligence_file = self.sourcedocs_dir / source_slug / "intelligence.jsonl"
+
+        results = []
+        if intelligence_file.exists():
+            with open(intelligence_file) as f:
+                for line in f:
+                    results.append(json.loads(line))
+
+        return results
+
+# Usage example
 context_manager = ContextManager()
 
-# Update content (run weekly/daily)
-context_manager.update{source-slug}()
+# Update documentation
+context_manager.update_documentation(
+    "../vendor/nextjs/docs",
+    "../sourcedocs/nextjs"
+)
 
-# Use the content
-prompt_engineering_docs = context_manager.load_pages_by_topic("prompt-engineering")
-for doc in prompt_engineering_docs:
+# Use the processed content
+react_docs = context_manager.load_documents_by_topic("hooks", "react")
+for doc in react_docs:
     print(f"Processing: {doc['content']['title']}")
     # Your processing logic here
 ```
@@ -387,40 +403,44 @@ for doc in prompt_engineering_docs:
 
 ### Common Issues
 
-#### Rate Limiting
+#### Missing Required Parameters
 ```bash
-# Reduce concurrent requests
-# In config/targets.yaml:
-rate_limit:
-  requests_per_second: 1
-  concurrent: 1
+# Error: Missing required parameters
+# Solution: Provide all required parameters or use project config
+contextor optimize \
+  --src /path/to/docs \
+  --out /path/to/output \
+  --repo owner/repository \
+  --ref main
 ```
 
-#### JavaScript-Heavy Sites
-```yaml
-# Switch to Playwright extractor
-extractor: playwright
-playwright_options:
-  headless: true
-  timeout: 30000
-  wait_for: "networkidle"
+#### Project Configuration Not Found
+```bash
+# Check available configurations
+contextor list-projects
+
+# Use exact configuration name
+contextor optimize --project-config nextjs  # not "Next.js"
 ```
 
-#### Content Not Extracted Properly
+#### No Files Processed
 ```bash
-# Test selectors interactively
-contextor test-selector --url "https://example.com/page" --selector "main article"
+# Check source directory structure
+ls -la /path/to/docs/
+
+# Ensure directory contains .md or .mdx files
+find /path/to/docs -name "*.md" -o -name "*.mdx" | head -10
 ```
 
-#### Permission Errors
+#### Intelligence Analysis Errors
 ```bash
-# Check robots.txt
-contextor check-robots --url "https://example.com"
+# Install intelligence dependencies
+poetry install --extras intelligence
 
-# Ensure proper user agent
-# In config/targets.yaml:
-headers:
-  User-Agent: "YourBot/1.0 (+https://yoursite.com/bot-info)"
+# Run with specific features only
+contextor intelligence \
+  --source-dir /path/to/mdc/files \
+  --features topic-extraction
 ```
 
 ### Debug Mode
@@ -428,10 +448,15 @@ headers:
 ```bash
 # Enable verbose logging
 export CONTEXTOR_LOG_LEVEL=DEBUG
-contextor fetch --config config/targets.yaml
+contextor optimize --src /path/to/docs --out /path/to/output --repo owner/repo --ref main
 
-# Save raw HTML for inspection
-contextor fetch --save-raw --config config/targets.yaml
+# Save processing metrics
+contextor optimize \
+  --src /path/to/docs \
+  --out /path/to/output \
+  --repo owner/repo \
+  --ref main \
+  --metrics-output debug-metrics.json
 ```
 
 ### Getting Help
@@ -439,16 +464,21 @@ contextor fetch --save-raw --config config/targets.yaml
 ```bash
 # Show help for any command
 contextor --help
-contextor fetch --help
+contextor optimize --help
+contextor intelligence --help
 
-# Show configuration schema
-contextor schema --format yaml
+# List available project configurations
+contextor list-projects
 ```
 
 ## Next Steps
 
-1. **Customize Extractors**: Create site-specific extraction rules in `config/extractors.yaml`
-2. **Automate Updates**: Set up CI/CD to regularly update your `{source-slug}/` directory
-3. **Integrate with Your Application**: Use the MCP files in your prompt engineering or AI workflows
-4. **Monitor Content Changes**: Set up alerts for significant content changes
-5. **Contribute**: Help improve Contextor by reporting issues or contributing new features
+1. **Explore Project Configurations**: Use built-in configurations for popular frameworks
+2. **Set Up Intelligence Analysis**: Enable advanced content analysis features
+3. **Deploy MCP Server**: Set up the MCP server for agent integration
+4. **Automate Processing**: Create CI/CD pipelines for regular updates
+5. **Customize Transforms**: Configure content transformation rules for your needs
+
+## Change log
+
+2025-01-12 — Updated to reflect current directory-based workflow, removed outdated web scraping examples, added project configuration guidance — (Documentation Team)

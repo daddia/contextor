@@ -35,7 +35,7 @@ This project enforces strict development standards through automated CI/CD pipel
 - Auto-approve architecture/security if policies pass
 - Standard merge timeline
 
-### Medium Risk Changes  
+### Medium Risk Changes
 - Two reviewers (owner + additional)
 - Human architect sign-off required
 - Performance smoke tests required
@@ -53,7 +53,7 @@ This project enforces strict development standards through automated CI/CD pipel
 - Static analysis result aggregation
 - Security findings with remediation guidance
 
-### Test & QA Agent (Agent G)  
+### Test & QA Agent (Agent G)
 - Coverage calculation and validation
 - Flaky test detection and quarantine
 - Performance test execution and analysis
@@ -75,7 +75,7 @@ This project enforces strict development standards through automated CI/CD pipel
 
 Required status checks for all PRs:
 - `format` - No diffs after auto-fix
-- `lint` - Zero errors, warnings triaged  
+- `lint` - Zero errors, warnings triaged
 - `type-check` - Zero type errors
 - `unit-tests` - All pass, coverage met
 - `security-scan` - No Critical/High vulnerabilities

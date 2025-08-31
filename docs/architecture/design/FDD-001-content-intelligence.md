@@ -2,7 +2,7 @@
 
 ## Summary
 
-Advanced Content Intelligence enhances Contextor's existing document processing pipeline by adding post-processing analysis capabilities that extract topics, identify relationships, detect duplicates, and assess content quality across document corpora. 
+Advanced Content Intelligence enhances Contextor's existing document processing pipeline by adding post-processing analysis capabilities that extract topics, identify relationships, detect duplicates, and assess content quality across document corpora.
 
 This feature operates as a separate CLI command that runs after initial document transformation, enabling comprehensive cross-document analysis without impacting the performance of the core optimization pipeline. The intelligence layer enriches `.mdc` files with structured metadata and creates dedicated indexes to support semantic search and relationship discovery for downstream agents and tools.
 
@@ -73,7 +73,7 @@ No authentication or authorization mechanisms required as processing operates wi
 
 ## Configuration
 
-Intelligence configuration supports `intelligence.yaml` files specifying analysis thresholds, feature toggles, and processing parameters. 
+Intelligence configuration supports `intelligence.yaml` files specifying analysis thresholds, feature toggles, and processing parameters.
 
 Key configuration surface includes `topic_extraction_enabled`, `cross_linking_enabled`, `quality_scoring_enabled`, `duplicate_detection_enabled`, `similarity_threshold` (default 0.8), `quality_completeness_weight` (default 0.4), `max_related_documents` (default 5), and `incremental_processing_enabled` (default true).
 
