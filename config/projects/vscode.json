@@ -1,0 +1,92 @@
+{
+  "settings": {
+    "title": "VS Code",
+    "private": false,
+    "project": "/microsoft/vscode",
+    "docsRepoUrl": "https://github.com/microsoft/vscode",
+    "folders": [
+      "docs",
+      "api"
+    ],
+    "excludeFolders": [
+      "resources",
+      "archive",
+      "archived",
+      "old",
+      "deprecated",
+      "legacy",
+      "previous",
+      "outdated",
+      "superseded",
+      "i18n/zh*",
+      "i18n/es*",
+      "i18n/fr*",
+      "i18n/de*",
+      "i18n/ja*",
+      "i18n/ko*",
+      "i18n/ru*",
+      "i18n/pt*",
+      "i18n/it*",
+      "i18n/ar*",
+      "i18n/hi*",
+      "i18n/tr*",
+      "i18n/nl*",
+      "i18n/pl*",
+      "i18n/sv*",
+      "i18n/vi*",
+      "i18n/th*",
+      "zh-cn",
+      "zh-tw",
+      "zh-hk",
+      "zh-mo",
+      "zh-sg"
+    ],
+    "branch": "main",
+    "description": "Visual Studio Code is a lightweight but powerful source code editor which runs on your desktop and is available for Windows, macOS and Linux.",
+    "approved": true,
+    "stars": 164000,
+    "trustScore": 10,
+    "vip": true,
+    "excludeFiles": [
+      "CHANGELOG.md",
+      "changelog.md",
+      "CHANGELOG.mdx",
+      "changelog.mdx",
+      "LICENSE.md",
+      "license.md",
+      "CODE_OF_CONDUCT.md",
+      "code_of_conduct.md",
+      "CONTRIBUTING.md",
+      "contributing.md",
+      "SECURITY.md",
+      "security.md"
+    ],
+    "type": "repo",
+    "topics": [
+      "editor",
+      "vscode",
+      "development-tools",
+      "ide",
+      "extensions"
+    ],
+    "profile": "balanced",
+    "transforms": {
+      "mdx_components": [],
+      "code_block_rules": {
+        "preserve_languages": [
+          "json",
+          "javascript",
+          "typescript",
+          "yaml",
+          "bash"
+        ],
+        "max_lines": 40
+      },
+      "link_rules": {
+        "base_url": "https://code.visualstudio.com",
+        "preserve_anchors": true
+      }
+    }
+  },
+  "tags": {}
+}

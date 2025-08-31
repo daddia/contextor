@@ -9,6 +9,7 @@ import structlog
 
 from .emit import MDCEmitter
 from .loader import DocumentLoader
+from .project_config import ProjectConfigManager
 from .transforms import apply_transforms
 
 logger = structlog.get_logger()
@@ -23,14 +24,33 @@ def cli(ctx):
 
 
 @cli.command()
+def list_projects():
+    """List available project configurations."""
+    config_manager = ProjectConfigManager()
+    projects = config_manager.list_available_projects()
+    
+    if not projects:
+        click.echo("No project configurations found.")
+        return
+    
+    click.echo("Available project configurations:")
+    for project_name in projects:
+        config = config_manager.load_project_config(project_name)
+        if config:
+            click.echo(f"  {project_name}: {config.title} ({config.repo_url})")
+        else:
+            click.echo(f"  {project_name}: (failed to load)")
+
+
+@cli.command()
 @click.option(
     "--src", required=True, help="Source directory containing Markdown/MDX files"
 )
 @click.option("--out", required=True, help="Output directory for .mdc files")
 @click.option(
-    "--repo", required=True, help="Repository identifier (e.g., 'vercel/next.js')"
+    "--repo", default="", help="Repository identifier (e.g., 'vercel/next.js') - optional if using project config"
 )
-@click.option("--ref", required=True, help="Git reference (branch or commit SHA)")
+@click.option("--ref", default="", help="Git reference (branch or commit SHA) - optional if using project config")
 @click.option("--topics", default="", help="Comma-separated list of topics")
 @click.option(
     "--profile",
@@ -38,8 +58,9 @@ def cli(ctx):
     help="Optimization profile: lossless, balanced, or compact",
 )
 @click.option("--config", default="", help="Configuration file path (YAML)")
+@click.option("--project-config", default="", help="Project configuration name (e.g., 'nextjs', 'react')")
 @click.option("--metrics-output", default="", help="Output path for run metrics JSON")
-def optimize(src, out, repo, ref, topics, profile, config, metrics_output):
+def optimize(src, out, repo, ref, topics, profile, config, project_config, metrics_output):
     """Convert a documentation directory to .mdc files.
 
     This command processes Markdown/MDX files from a source directory,
@@ -55,6 +76,45 @@ def optimize(src, out, repo, ref, topics, profile, config, metrics_output):
         logger.error("Source directory does not exist or is not a directory", src=src)
         raise click.Abort()
 
+    # Load project configuration if specified
+    project_cfg = None
+    if project_config:
+        config_manager = ProjectConfigManager()
+        project_cfg = config_manager.load_project_config(project_config)
+        if not project_cfg:
+            logger.error("Project configuration not found", project=project_config)
+            raise click.Abort()
+        
+        logger.info("Using project configuration", 
+                   project=project_config, title=project_cfg.title)
+
+    # Override parameters with project config if available
+    if project_cfg:
+        # Use project config repo if not provided via CLI
+        if not repo:
+            repo_url = project_cfg.repo_url
+            if repo_url.startswith("https://github.com/"):
+                repo = repo_url.replace("https://github.com/", "")
+            else:
+                repo = project_cfg.project_path.lstrip("/")
+        
+        # Use project config branch if not provided
+        if not ref:
+            ref = project_cfg.branch
+            
+        # Use project config profile if not overridden
+        if profile == "balanced":
+            profile = project_cfg.profile
+    
+    # Validate required parameters after project config override
+    if not repo:
+        logger.error("Repository identifier is required (use --repo or --project-config)")
+        raise click.Abort()
+    
+    if not ref:
+        logger.error("Git reference is required (use --ref or --project-config)")
+        raise click.Abort()
+
     logger.info(
         "Starting contextor optimize",
         src=src,
@@ -63,15 +123,19 @@ def optimize(src, out, repo, ref, topics, profile, config, metrics_output):
         ref=ref,
         topics=topics,
         profile=profile,
+        project_config=project_config,
     )
 
     # Parse topics
     topic_list = []
     if topics:
         topic_list = [t.strip() for t in topics.split(",") if t.strip()]
+    elif project_cfg:
+        # Use project config topics if none provided
+        topic_list = project_cfg.topics
 
     # Initialize components
-    loader = DocumentLoader(src_path, repo=repo, ref=ref, config_path=config_path)
+    loader = DocumentLoader(src_path, repo=repo, ref=ref, config_path=config_path, project_config=project_cfg)
     emitter = MDCEmitter(out_path)
 
     # Process files

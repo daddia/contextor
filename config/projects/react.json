@@ -1,0 +1,102 @@
+{
+  "settings": {
+    "title": "React",
+    "private": false,
+    "project": "/facebook/react",
+    "docsRepoUrl": "https://github.com/facebook/react",
+    "folders": [
+      "docs",
+      "beta"
+    ],
+    "excludeFolders": [
+      "archive",
+      "archived",
+      "old",
+      "deprecated",
+      "legacy",
+      "previous",
+      "outdated",
+      "superseded",
+      "i18n/zh*",
+      "i18n/es*",
+      "i18n/fr*",
+      "i18n/de*",
+      "i18n/ja*",
+      "i18n/ko*",
+      "i18n/ru*",
+      "i18n/pt*",
+      "i18n/it*",
+      "i18n/ar*",
+      "i18n/hi*",
+      "i18n/tr*",
+      "i18n/nl*",
+      "i18n/pl*",
+      "i18n/sv*",
+      "i18n/vi*",
+      "i18n/th*",
+      "zh-cn",
+      "zh-tw",
+      "zh-hk",
+      "zh-mo",
+      "zh-sg"
+    ],
+    "branch": "main",
+    "description": "A JavaScript library for building user interfaces. React makes it painless to create interactive UIs with a component-based architecture.",
+    "approved": true,
+    "stars": 230000,
+    "trustScore": 10,
+    "vip": true,
+    "excludeFiles": [
+      "CHANGELOG.md",
+      "changelog.md",
+      "CHANGELOG.mdx",
+      "changelog.mdx",
+      "LICENSE.md",
+      "license.md",
+      "CODE_OF_CONDUCT.md",
+      "code_of_conduct.md",
+      "CONTRIBUTING.md",
+      "contributing.md",
+      "SECURITY.md",
+      "security.md"
+    ],
+    "type": "repo",
+    "topics": [
+      "framework",
+      "react",
+      "javascript",
+      "ui",
+      "component",
+      "hooks"
+    ],
+    "profile": "balanced",
+    "transforms": {
+      "mdx_components": [
+        "Intro",
+        "YouWillLearn",
+        "Recap",
+        "Challenges",
+        "Hint",
+        "Solution",
+        "Sandpack",
+        "CodeStep",
+        "Diagram"
+      ],
+      "code_block_rules": {
+        "preserve_languages": [
+          "js",
+          "jsx",
+          "javascript",
+          "typescript",
+          "tsx"
+        ],
+        "max_lines": 35
+      },
+      "link_rules": {
+        "base_url": "https://react.dev",
+        "preserve_anchors": true
+      }
+    }
+  },
+  "tags": {}
+}

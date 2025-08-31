@@ -23,11 +23,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/), and this 
   - Pre-configured profiles for Next.js, React, Tailwind CSS, VS Code, and Vite
   - Comprehensive `optimize.sample.yaml` with multi-source configuration
   - Profile documentation and usage guidelines
+- **Advanced project configurations** aligned with Context7 structure
+  - JSON-based project configurations in `config/projects/` directory
+  - Context7-compatible metadata including trust scores, approval status, and VIP flags
+  - New `--project-config` CLI option for simplified usage
+  - `contextor list-projects` command to view available configurations
+  - Automatic parameter inference from project configurations (repo, branch, topics, profile)
+  - Enhanced GitHub Actions integration with dynamic configuration loading
 
 ### Changed
 
 - Enhanced Makefile with metrics support and improved examples
 - Updated CLI help text to include new metrics option
+- Simplified GitHub Actions matrix configuration (project details now in JSON configs)
+- Updated DocumentLoader to support project configuration integration
 
 ## [0.0.1] - 2025-08-31
 

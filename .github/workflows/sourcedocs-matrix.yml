@@ -29,44 +29,24 @@ jobs:
       - name: Set up matrix
         id: set-matrix
         run: |
-          # Define the source matrix configuration
+          # Define the source matrix configuration (simplified - project configs contain the details)
           cat > sources.json << 'EOF'
           {
             "include": [
               {
-                "repo": "vercel/next.js",
-                "ref": "canary",
-                "src_path": "docs",
-                "source_slug": "nextjs",
-                "topics": "framework,nextjs,react,web-development"
+                "source_slug": "nextjs"
               },
               {
-                "repo": "tailwindlabs/tailwindcss",
-                "ref": "master", 
-                "src_path": "src",
-                "source_slug": "tailwindcss",
-                "topics": "css,framework,tailwind,design-system"
+                "source_slug": "tailwindcss"
               },
               {
-                "repo": "facebook/react",
-                "ref": "main",
-                "src_path": "docs",
-                "source_slug": "react",
-                "topics": "framework,react,javascript,ui"
+                "source_slug": "react"
               },
               {
-                "repo": "microsoft/vscode",
-                "ref": "main",
-                "src_path": "docs",
-                "source_slug": "vscode",
-                "topics": "editor,vscode,development-tools"
+                "source_slug": "vscode"
               },
               {
-                "repo": "vitejs/vite",
-                "ref": "main",
-                "src_path": "docs",
-                "source_slug": "vite",
-                "topics": "build-tool,vite,javascript,bundler"
+                "source_slug": "vite"
               }
             ]
           }
@@ -104,11 +84,36 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: sourcedocs
 
+      - name: Read project configuration
+        id: read-config
+        working-directory: contextor
+        run: |
+          # Read project configuration to get repo and other settings
+          CONFIG_FILE="config/projects/${{ matrix.source_slug }}.json"
+          if [ -f "$CONFIG_FILE" ]; then
+            REPO_URL=$(jq -r '.settings.docsRepoUrl' "$CONFIG_FILE")
+            REPO=$(echo "$REPO_URL" | sed 's|https://github.com/||')
+            BRANCH=$(jq -r '.settings.branch' "$CONFIG_FILE")
+            FOLDERS=$(jq -r '.settings.folders[]' "$CONFIG_FILE" | head -1)
+            
+            echo "repo=$REPO" >> $GITHUB_OUTPUT
+            echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+            echo "src_path=$FOLDERS" >> $GITHUB_OUTPUT
+            
+            echo "Using project config: ${{ matrix.source_slug }}"
+            echo "Repository: $REPO"
+            echo "Branch: $BRANCH"
+            echo "Source path: $FOLDERS"
+          else
+            echo "Project configuration not found: $CONFIG_FILE"
+            exit 1
+          fi
+
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
-          repository: ${{ matrix.repo }}
-          ref: ${{ matrix.ref }}
+          repository: ${{ steps.read-config.outputs.repo }}
+          ref: ${{ steps.read-config.outputs.branch }}
           path: upstream/${{ matrix.source_slug }}
 
       - name: Set up Python
@@ -146,14 +151,14 @@ jobs:
             
             if [ "$LATEST_COMMIT" = "$PREV_COMMIT" ]; then
               echo "has_changes=false" >> $GITHUB_OUTPUT
-              echo "No changes detected in ${{ matrix.repo }} since $PREV_COMMIT"
+              echo "No changes detected in ${{ steps.read-config.outputs.repo }} since $PREV_COMMIT"
             else
               echo "has_changes=true" >> $GITHUB_OUTPUT
-              echo "Changes detected in ${{ matrix.repo }}: $PREV_COMMIT -> $LATEST_COMMIT"
+              echo "Changes detected in ${{ steps.read-config.outputs.repo }}: $PREV_COMMIT -> $LATEST_COMMIT"
             fi
           else
             echo "has_changes=true" >> $GITHUB_OUTPUT
-            echo "First run for ${{ matrix.repo }}, will process all files"
+            echo "First run for ${{ steps.read-config.outputs.repo }}, will process all files"
           fi
 
       - name: Run contextor optimize
@@ -161,11 +166,9 @@ jobs:
         working-directory: contextor
         run: |
           poetry run contextor optimize \
-            --src "../upstream/${{ matrix.source_slug }}/${{ matrix.src_path }}" \
+            --src "../upstream/${{ matrix.source_slug }}/${{ steps.read-config.outputs.src_path }}" \
             --out "../sourcedocs/${{ matrix.source_slug }}" \
-            --repo "${{ matrix.repo }}" \
-            --ref "${{ matrix.ref }}" \
-            --topics "${{ matrix.topics }}" \
+            --project-config "${{ matrix.source_slug }}" \
             --metrics-output "../sourcedocs/${{ matrix.source_slug }}/metrics.json"
 
       - name: Record commit hash
@@ -213,7 +216,7 @@ jobs:
           - Skipped: $SKIPPED files
           - Errors: $ERRORS files
           
-          Source: ${{ matrix.repo }}@${{ steps.check-changes.outputs.latest_commit || matrix.ref }}"
+          Source: ${{ steps.read-config.outputs.repo }}@${{ steps.check-changes.outputs.latest_commit || steps.read-config.outputs.branch }}"
           fi
           
           git commit -m "$COMMIT_MSG"

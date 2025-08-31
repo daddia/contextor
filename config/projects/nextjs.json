@@ -1,0 +1,101 @@
+{
+  "settings": {
+    "title": "Next.js",
+    "private": false,
+    "project": "/vercel/next.js",
+    "docsRepoUrl": "https://github.com/vercel/next.js",
+    "folders": [
+      "docs"
+    ],
+    "excludeFolders": [
+      "docs/api-reference/legacy",
+      "docs/pages/api-reference/legacy",
+      "archive",
+      "archived",
+      "old",
+      "docs/old",
+      "deprecated",
+      "legacy",
+      "previous",
+      "outdated",
+      "superseded",
+      "i18n/zh*",
+      "i18n/es*",
+      "i18n/fr*",
+      "i18n/de*",
+      "i18n/ja*",
+      "i18n/ko*",
+      "i18n/ru*",
+      "i18n/pt*",
+      "i18n/it*",
+      "i18n/ar*",
+      "i18n/hi*",
+      "i18n/tr*",
+      "i18n/nl*",
+      "i18n/pl*",
+      "i18n/sv*",
+      "i18n/vi*",
+      "i18n/th*",
+      "zh-cn",
+      "zh-tw",
+      "zh-hk",
+      "zh-mo",
+      "zh-sg"
+    ],
+    "branch": "canary",
+    "description": "Next.js enables you to create full-stack web applications by extending the latest React features and integrating powerful Rust-based JavaScript tooling for the fastest builds.",
+    "approved": true,
+    "stars": 131745,
+    "trustScore": 10,
+    "vip": true,
+    "excludeFiles": [
+      "CHANGELOG.md",
+      "changelog.md",
+      "CHANGELOG.mdx",
+      "changelog.mdx",
+      "LICENSE.md",
+      "license.md",
+      "CODE_OF_CONDUCT.md",
+      "code_of_conduct.md",
+      "CONTRIBUTING.md",
+      "contributing.md",
+      "SECURITY.md",
+      "security.md"
+    ],
+    "type": "repo",
+    "topics": [
+      "framework",
+      "nextjs",
+      "react",
+      "web-development",
+      "javascript",
+      "typescript"
+    ],
+    "profile": "balanced",
+    "transforms": {
+      "mdx_components": [
+        "Callout",
+        "Card",
+        "Cards",
+        "Tabs",
+        "Tab",
+        "Steps",
+        "FileTree"
+      ],
+      "code_block_rules": {
+        "preserve_languages": [
+          "jsx",
+          "tsx",
+          "javascript",
+          "typescript"
+        ],
+        "max_lines": 30
+      },
+      "link_rules": {
+        "base_url": "https://nextjs.org",
+        "preserve_anchors": true
+      }
+    }
+  },
+  "tags": {}
+}

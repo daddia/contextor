@@ -28,6 +28,8 @@ help:
 	@echo "  make dev && make test"
 	@echo "  make optimize src=../vendor/nextjs/docs out=../sourcedocs/nextjs repo=vercel/next.js ref=main"
 	@echo "  make optimize src=../vendor/nextjs/docs out=../sourcedocs/nextjs repo=vercel/next.js ref=main metrics=metrics.json"
+	@echo "  poetry run contextor optimize --src ../vendor/nextjs/docs --out ../sourcedocs/nextjs --project-config nextjs"
+	@echo "  poetry run contextor list-projects"
 
 # Development setup
 install:

@@ -29,7 +29,7 @@ class DocumentLoader:
     """Loads and discovers Markdown/MDX files from a directory."""
 
     def __init__(
-        self, source_dir: Path, repo: str, ref: str, config_path: Path | None = None
+        self, source_dir: Path, repo: str, ref: str, config_path: Path | None = None, project_config: Any = None
     ):
         """Initialize the document loader.
 
@@ -38,11 +38,20 @@ class DocumentLoader:
             repo: Repository identifier (e.g., 'vercel/next.js')
             ref: Git reference (branch or commit SHA)
             config_path: Optional configuration file path
+            project_config: Optional project configuration object
         """
         self.source_dir = Path(source_dir)
         self.repo = repo
         self.ref = ref
+        self.project_config = project_config
         self.config = self._load_config(config_path)
+        
+        # Override with project config if available
+        if project_config:
+            legacy_config = project_config.to_legacy_format()
+            # Merge project config with existing config (project config takes precedence)
+            for key, value in legacy_config.items():
+                self.config[key] = value
 
         # Default patterns
         self.include_patterns = self.config.get(

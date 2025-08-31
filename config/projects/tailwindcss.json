@@ -1,0 +1,98 @@
+{
+  "settings": {
+    "title": "Tailwind CSS",
+    "private": false,
+    "project": "/tailwindlabs/tailwindcss",
+    "docsRepoUrl": "https://github.com/tailwindlabs/tailwindcss",
+    "folders": [
+      "src"
+    ],
+    "excludeFolders": [
+      "src/pages/blog",
+      "archive",
+      "archived",
+      "old",
+      "deprecated",
+      "legacy",
+      "previous",
+      "outdated",
+      "superseded",
+      "i18n/zh*",
+      "i18n/es*",
+      "i18n/fr*",
+      "i18n/de*",
+      "i18n/ja*",
+      "i18n/ko*",
+      "i18n/ru*",
+      "i18n/pt*",
+      "i18n/it*",
+      "i18n/ar*",
+      "i18n/hi*",
+      "i18n/tr*",
+      "i18n/nl*",
+      "i18n/pl*",
+      "i18n/sv*",
+      "i18n/vi*",
+      "i18n/th*",
+      "zh-cn",
+      "zh-tw",
+      "zh-hk",
+      "zh-mo",
+      "zh-sg"
+    ],
+    "branch": "master",
+    "description": "A utility-first CSS framework for rapidly building custom user interfaces. Tailwind CSS provides low-level utility classes to build completely custom designs.",
+    "approved": true,
+    "stars": 82000,
+    "trustScore": 10,
+    "vip": true,
+    "excludeFiles": [
+      "CHANGELOG.md",
+      "changelog.md",
+      "CHANGELOG.mdx",
+      "changelog.mdx",
+      "LICENSE.md",
+      "license.md",
+      "CODE_OF_CONDUCT.md",
+      "code_of_conduct.md",
+      "CONTRIBUTING.md",
+      "contributing.md",
+      "SECURITY.md",
+      "security.md"
+    ],
+    "type": "repo",
+    "topics": [
+      "css",
+      "framework",
+      "tailwind",
+      "design-system",
+      "styling",
+      "utility-first"
+    ],
+    "profile": "balanced",
+    "transforms": {
+      "mdx_components": [
+        "Callout",
+        "CodeSample",
+        "Tip",
+        "Warning",
+        "TipGood",
+        "TipBad"
+      ],
+      "code_block_rules": {
+        "preserve_languages": [
+          "css",
+          "html",
+          "javascript",
+          "jsx"
+        ],
+        "max_lines": 25
+      },
+      "link_rules": {
+        "base_url": "https://tailwindcss.com",
+        "preserve_anchors": true
+      }
+    }
+  },
+  "tags": {}
+}
