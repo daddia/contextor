@@ -1,0 +1,139 @@
+{
+  "settings": {
+    "title": "Model Context Protocol",
+    "private": false,
+    "project": "/modelcontextprotocol/modelcontextprotocol",
+    "docsRepoUrl": "https://github.com/modelcontextprotocol/modelcontextprotocol",
+    "folders": [
+      "docs"
+    ],
+    "excludeFolders": [
+      "archive",
+      "archived",
+      "old",
+      "deprecated",
+      "legacy",
+      "previous",
+      "outdated",
+      "superseded",
+      "i18n/zh*",
+      "i18n/es*",
+      "i18n/fr*",
+      "i18n/de*",
+      "i18n/ja*",
+      "i18n/ko*",
+      "i18n/ru*",
+      "i18n/pt*",
+      "i18n/it*",
+      "i18n/ar*",
+      "i18n/hi*",
+      "i18n/tr*",
+      "i18n/nl*",
+      "i18n/pl*",
+      "i18n/sv*",
+      "i18n/vi*",
+      "i18n/th*",
+      "zh-cn",
+      "zh-tw",
+      "zh-hk",
+      "zh-mo",
+      "zh-sg"
+    ],
+    "branch": "main",
+    "description": "Model Context Protocol (MCP) specification and documentation - enabling AI models to securely access external data sources and tools.",
+    "approved": true,
+    "stars": 5400,
+    "trustScore": 10,
+    "vip": true,
+    "excludeFiles": [
+      "CHANGELOG.md",
+      "changelog.md",
+      "CHANGELOG.mdx",
+      "changelog.mdx",
+      "LICENSE.md",
+      "license.md",
+      "LICENSE",
+      "CODE_OF_CONDUCT.md",
+      "code_of_conduct.md",
+      "CONTRIBUTING.md",
+      "contributing.md",
+      "SECURITY.md",
+      "security.md",
+      "MAINTAINERS.md",
+      "maintainers.md"
+    ],
+    "type": "repo",
+    "topics": [
+      "mcp",
+      "model-context-protocol",
+      "ai",
+      "protocol",
+      "specification",
+      "anthropic",
+      "llm",
+      "documentation"
+    ],
+    "profile": "balanced",
+    "transforms": {
+      "mdx_components": [
+        "Callout",
+        "Card",
+        "Cards",
+        "Tabs",
+        "Tab",
+        "Steps",
+        "CodeBlock",
+        "Warning",
+        "Info",
+        "Tip"
+      ],
+      "code_block_rules": {
+        "preserve_languages": [
+          "json",
+          "typescript",
+          "javascript",
+          "python",
+          "bash",
+          "shell",
+          "yaml",
+          "toml"
+        ],
+        "max_lines": 40
+      },
+      "link_rules": {
+        "base_url": "https://modelcontextprotocol.io",
+        "preserve_anchors": true
+      }
+    }
+  },
+  "tags": {
+    "priority": "high",
+    "category": "protocol",
+    "maintenance": "active",
+    "team": "anthropic",
+    "use_case": "ai-integration"
+  },
+  "metadata": {
+    "last_scanned_at": "2025-09-01T13:50:25.298121Z",
+    "last_scan_duration": 10.027,
+    "last_scan_stats": {
+      "files": 120,
+      "written": 120,
+      "errors": 0,
+      "tokens": 173477
+    },
+    "last_scan_source": {
+      "branch": "main",
+      "commit": null
+    },
+    "scan_history": [
+      {
+        "timestamp": "2025-09-01T13:50:25.298121Z",
+        "duration": 10.027,
+        "files": 120,
+        "tokens": 173477,
+        "success": true
+      }
+    ]
+  }
+}
