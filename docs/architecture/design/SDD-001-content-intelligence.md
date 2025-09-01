@@ -1,4 +1,4 @@
-# Advanced Content Intelligence Feature Design
+# Advanced Content Intelligence - Solution Design
 
 ## Summary
 

@@ -1,10 +1,10 @@
-# Feature Design Document Index
+# Solution Design Document Index
 
-Below are all the Feature Design Documents. Feature Design Documents capture detailed technical designs for specific features, systems, or platform components that implement business or technical requirements.
+Below are all the Solution Design Documents. Solution Design Documents capture detailed technical designs for specific features, systems, or platform components that implement business or technical requirements.
 
-## What is a Feature Design Document?
+## What is a Solution Design Document?
 
-A Feature Design Document captures the comprehensive technical design for a feature or system component. Each design document describes:
+A Solution Design Document captures the comprehensive technical design for a feature or system component. Each design document describes:
 
 - The problem being solved and requirements
 - Goals and non-goals of the implementation
@@ -17,7 +17,8 @@ A Feature Design Document captures the comprehensive technical design for a feat
 
 | ID                                             | Title                         | Status   | Date       | Owner        |
 |------------------------------------------------|-------------------------------|----------|------------|--------------|
-| [FDD-001](FDD-001-content-intelligence.md)     | Advanced Content Intelligence | Accepted | 2025-08-31 | —            |
+| [SDD-001](SDD-001-content-intelligence.md)     | Advanced Content Intelligence | Accepted | 2025-08-31 | —            |
+| [SDD-002](SDD-002-parallel-processing.md)      | Parallel Processing           | Accepted | 2025-09-02 | —            |
 
 ---
 
@@ -31,14 +32,12 @@ A Feature Design Document captures the comprehensive technical design for a feat
 
 ---
 
-## Creating a New Feature Design Document
-
-Use the template provided at [../templates/feature-design-doc.md](../templates/feature-design-doc.md) to create new Feature Design Documents.
+## Creating a New Solution Design Document
 
 1. Copy the template to a new file with a descriptive name:
 
    ```bash
-   cp docs/templates/feature-design-doc.md docs/design/{feature-name}.md
+   cp docs/templates/solution-design-doc.md docs/design/SDD-{{000}}-{{solution-name}}.md
    ```
 
 2. The filename should follow the pattern `FDD-{000}-{feature-name}.md`:
