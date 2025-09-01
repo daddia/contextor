@@ -1,15 +1,13 @@
 {
   "settings": {
-    "title": "VS Code",
+    "title": "Shadcn UI",
     "private": false,
-    "project": "/microsoft/vscode",
-    "docsRepoUrl": "https://github.com/microsoft/vscode",
+    "project": "/shadcn-ui/ui",
+    "docsRepoUrl": "https://github.com/shadcn-ui/ui",
     "folders": [
-      "docs",
-      "api"
+      "apps/www/content/docs"
     ],
     "excludeFolders": [
-      "resources",
       "archive",
       "archived",
       "old",
@@ -42,9 +40,9 @@
       "zh-sg"
     ],
     "branch": "main",
-    "description": "Visual Studio Code is a lightweight but powerful source code editor which runs on your desktop and is available for Windows, macOS and Linux.",
+    "description": "Accessible and customizable components that you can copy and paste into your apps. Free. Open Source. Use this to build your own component library.",
     "approved": true,
-    "stars": 164000,
+    "stars": 94000,
     "trustScore": 10,
     "vip": true,
     "excludeFiles": [
@@ -63,30 +61,63 @@
     ],
     "type": "repo",
     "topics": [
-      "editor",
-      "vscode",
-      "development-tools",
-      "ide",
-      "extensions"
+      "react",
+      "components",
+      "ui",
+      "nextjs",
+      "tailwindcss",
+      "radix-ui",
+      "shadcn",
+      "design-system"
     ],
     "profile": "balanced",
     "transforms": {
-      "mdx_components": [],
+      "mdx_components": [
+        "Callout",
+        "ComponentPreview",
+        "ComponentSource",
+        "Steps",
+        "Tabs",
+        "TabsList",
+        "TabsContent"
+      ],
       "code_block_rules": {
         "preserve_languages": [
-          "json",
-          "javascript",
+          "tsx",
+          "jsx",
           "typescript",
-          "yaml",
-          "bash"
+          "javascript"
         ],
         "max_lines": 40
       },
       "link_rules": {
-        "base_url": "https://code.visualstudio.com",
+        "base_url": "https://ui.shadcn.com",
         "preserve_anchors": true
       }
     }
   },
-  "tags": {}
+  "tags": {},
+  "metadata": {
+    "last_scanned_at": "2025-09-01T12:51:15.644100Z",
+    "last_scan_duration": 7.663,
+    "last_scan_stats": {
+      "files": 85,
+      "written": 85,
+      "errors": 0,
+      "tokens": 39458
+    },
+    "last_scan_source": {
+      "branch": "main",
+      "commit": null
+    },
+    "scan_history": [
+      {
+        "timestamp": "2025-09-01T12:51:15.644100Z",
+        "duration": 7.663,
+        "files": 85,
+        "tokens": 39458,
+        "success": true
+      }
+    ]
+  }
 }

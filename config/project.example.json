@@ -1,0 +1,159 @@
+{
+  "settings": {
+    "title": "Example Project",
+    "private": false,
+    "project": "/owner/repository",
+    "docsRepoUrl": "https://github.com/owner/repository",
+    "folders": [
+      "docs",
+      "api"
+    ],
+    "excludeFolders": [
+      "docs/api-reference/legacy",
+      "docs/archive",
+      "archive",
+      "archived",
+      "old",
+      "deprecated",
+      "legacy",
+      "previous",
+      "outdated",
+      "superseded",
+      "i18n/zh*",
+      "i18n/es*",
+      "i18n/fr*",
+      "i18n/de*",
+      "i18n/ja*",
+      "i18n/ko*",
+      "i18n/ru*",
+      "i18n/pt*",
+      "i18n/it*",
+      "i18n/ar*",
+      "i18n/hi*",
+      "i18n/tr*",
+      "i18n/nl*",
+      "i18n/pl*",
+      "i18n/sv*",
+      "i18n/vi*",
+      "i18n/th*",
+      "zh-cn",
+      "zh-tw",
+      "zh-hk",
+      "zh-mo",
+      "zh-sg"
+    ],
+    "branch": "main",
+    "description": "An example project configuration showing all available options and features for contextor processing.",
+    "approved": true,
+    "stars": 50000,
+    "trustScore": 9,
+    "vip": true,
+    "excludeFiles": [
+      "CHANGELOG.md",
+      "changelog.md",
+      "CHANGELOG.mdx",
+      "changelog.mdx",
+      "LICENSE.md",
+      "license.md",
+      "CODE_OF_CONDUCT.md",
+      "code_of_conduct.md",
+      "CONTRIBUTING.md",
+      "contributing.md",
+      "SECURITY.md",
+      "security.md",
+      "README.md"
+    ],
+    "type": "repo",
+    "topics": [
+      "framework",
+      "javascript",
+      "typescript",
+      "documentation",
+      "api",
+      "examples"
+    ],
+    "profile": "balanced",
+    "transforms": {
+      "mdx_components": [
+        "Callout",
+        "Card",
+        "Cards",
+        "Tabs",
+        "Tab",
+        "Steps",
+        "CodeBlock",
+        "ApiReference",
+        "Example"
+      ],
+      "code_block_rules": {
+        "preserve_languages": [
+          "javascript",
+          "typescript",
+          "jsx",
+          "tsx",
+          "json",
+          "yaml",
+          "bash"
+        ],
+        "max_lines": 35
+      },
+      "link_rules": {
+        "base_url": "https://example.com",
+        "preserve_anchors": true
+      }
+    }
+  },
+  "tags": {
+    "priority": "high",
+    "category": "framework",
+    "maintenance": "active"
+  },
+  "metadata": {
+    "last_scanned_at": "2025-09-01T12:30:00.000000Z",
+    "last_scan_duration": 8.5,
+    "last_scan_stats": {
+      "files": 150,
+      "written": 148,
+      "errors": 2,
+      "tokens": 125000
+    },
+    "last_scan_source": {
+      "branch": "main",
+      "commit": "abc123def456"
+    },
+    "scan_history": [
+      {
+        "timestamp": "2025-08-15T10:00:00.000000Z",
+        "duration": 7.2,
+        "files": 145,
+        "tokens": 120000,
+        "success": true
+      },
+      {
+        "timestamp": "2025-08-20T14:30:00.000000Z",
+        "duration": 8.1,
+        "files": 147,
+        "tokens": 122500,
+        "success": true
+      },
+      {
+        "timestamp": "2025-09-01T12:30:00.000000Z",
+        "duration": 8.5,
+        "files": 150,
+        "tokens": 125000,
+        "success": true
+      }
+    ],
+    "refresh_schedule": {
+      "frequency": "daily",
+      "last_check": "2025-09-01T12:30:00.000000Z",
+      "next_scheduled": "2025-09-02T12:30:00.000000Z",
+      "auto_refresh": true
+    },
+    "processing_notes": [
+      "High-priority project with active development",
+      "Documentation updates frequently",
+      "Requires daily refresh for latest API changes"
+    ]
+  }
+}

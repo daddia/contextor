@@ -2,11 +2,10 @@
   "settings": {
     "title": "React",
     "private": false,
-    "project": "/facebook/react",
-    "docsRepoUrl": "https://github.com/facebook/react",
+    "project": "/reactjs/react.dev",
+    "docsRepoUrl": "https://github.com/reactjs/react.dev",
     "folders": [
-      "docs",
-      "beta"
+      "src/content"
     ],
     "excludeFolders": [
       "archive",
@@ -98,5 +97,28 @@
       }
     }
   },
-  "tags": {}
+  "tags": {},
+  "metadata": {
+    "last_scanned_at": "2025-09-01T12:47:58.942910Z",
+    "last_scan_duration": 11.926,
+    "last_scan_stats": {
+      "files": 191,
+      "written": 0,
+      "errors": 0,
+      "tokens": 0
+    },
+    "last_scan_source": {
+      "branch": "main",
+      "commit": null
+    },
+    "scan_history": [
+      {
+        "timestamp": "2025-09-01T12:47:58.942910Z",
+        "duration": 11.926,
+        "files": 191,
+        "tokens": 0,
+        "success": true
+      }
+    ]
+  }
 }

@@ -46,6 +46,8 @@ class DocumentLoader:
         # Use project config or defaults
         if project_config:
             self.config = project_config.to_legacy_format()
+            # When processing a specific folder from the config, adjust patterns
+            self._adjust_patterns_for_folder()
         else:
             self.config = {}
 
@@ -66,6 +68,29 @@ class DocumentLoader:
                 "build/**/*",
             ],
         )
+
+    def _adjust_patterns_for_folder(self) -> None:
+        """Adjust include/exclude patterns when processing a specific configured folder."""
+        if not self.project_config or not self.project_config.folders:
+            return
+
+        # Check if our source directory matches any configured folder
+        source_parts = self.source_dir.parts
+
+        for folder in self.project_config.folders:
+            folder_parts = Path(folder).parts
+
+            # Check if source directory ends with the configured folder path
+            if len(source_parts) >= len(folder_parts):
+                if source_parts[-len(folder_parts) :] == folder_parts:
+                    # We're processing this specific folder, so use simple patterns
+                    self.config["include"] = ["*.md", "*.mdx", "**/*.md", "**/*.mdx"]
+                    logger.debug(
+                        "Adjusted patterns for folder",
+                        folder=folder,
+                        source=self.source_dir,
+                    )
+                    return
 
     def _should_include_file(self, file_path: Path) -> bool:
         """Check if a file should be included based on patterns."""

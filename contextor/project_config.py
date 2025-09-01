@@ -23,6 +23,7 @@ class ProjectConfig:
         """
         self.settings = config_data.get("settings", {})
         self.tags = config_data.get("tags", {})
+        self.metadata = config_data.get("metadata", {})
 
     @property
     def title(self) -> str:
@@ -149,6 +150,51 @@ class ProjectConfig:
             "default_topics": self.topics,
             "default_profile": self.profile,
             "transforms": self.transforms,
+        }
+
+    def update_scan_metadata(self, scan_results: dict[str, Any]) -> None:
+        """Update metadata with scan results.
+
+        Args:
+            scan_results: Results from a successful scan operation
+        """
+        self.metadata.update(
+            {
+                "last_scanned_at": scan_results.get("timestamp"),
+                "last_scan_duration": scan_results.get("duration_seconds"),
+                "last_scan_stats": {
+                    "files": scan_results.get("processed", 0),
+                    "written": scan_results.get("written", 0),
+                    "errors": scan_results.get("errors", 0),
+                    "tokens": scan_results.get("total_tokens", 0),
+                },
+                "last_scan_source": {
+                    "branch": scan_results.get("branch"),
+                    "commit": scan_results.get("commit_sha"),  # If available
+                },
+                "scan_history": self.metadata.get("scan_history", [])[-9:]
+                + [
+                    {
+                        "timestamp": scan_results.get("timestamp"),
+                        "duration": scan_results.get("duration_seconds"),
+                        "files": scan_results.get("processed", 0),
+                        "tokens": scan_results.get("total_tokens", 0),
+                        "success": scan_results.get("errors", 0) == 0,
+                    }
+                ],  # Keep last 10 scans
+            }
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert back to dictionary format for saving.
+
+        Returns:
+            Complete configuration dictionary
+        """
+        return {
+            "settings": self.settings,
+            "tags": self.tags,
+            "metadata": self.metadata,
         }
 
 
@@ -445,3 +491,39 @@ class ProjectConfigManager:
             return None
 
         return self.sync_with_standards_config(config_path, project_name)
+
+    def save_project_config(
+        self, project_name: str, project_config: ProjectConfig
+    ) -> bool:
+        """Save project configuration back to file.
+
+        Args:
+            project_name: Name of the project configuration
+            project_config: ProjectConfig object to save
+
+        Returns:
+            True if saved successfully, False otherwise
+        """
+        config_path = self.config_dir / f"{project_name}.json"
+
+        try:
+            config_data = project_config.to_dict()
+
+            # Write with pretty formatting
+            with open(config_path, "w", encoding="utf-8") as f:
+                json.dump(config_data, f, indent=2, ensure_ascii=False)
+                f.write("\n")  # Add final newline
+
+            logger.info(
+                "Updated project configuration", project=project_name, path=config_path
+            )
+            return True
+
+        except Exception as e:
+            logger.error(
+                "Failed to save project configuration",
+                project=project_name,
+                path=config_path,
+                error=str(e),
+            )
+            return False

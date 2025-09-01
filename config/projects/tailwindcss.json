@@ -2,8 +2,8 @@
   "settings": {
     "title": "Tailwind CSS",
     "private": false,
-    "project": "/tailwindlabs/tailwindcss",
-    "docsRepoUrl": "https://github.com/tailwindlabs/tailwindcss",
+    "project": "/tailwindlabs/tailwindcss.com",
+    "docsRepoUrl": "https://github.com/tailwindlabs/tailwindcss.com",
     "folders": [
       "src"
     ],
@@ -40,7 +40,7 @@
       "zh-mo",
       "zh-sg"
     ],
-    "branch": "master",
+    "branch": "main",
     "description": "A utility-first CSS framework for rapidly building custom user interfaces. Tailwind CSS provides low-level utility classes to build completely custom designs.",
     "approved": true,
     "stars": 82000,
